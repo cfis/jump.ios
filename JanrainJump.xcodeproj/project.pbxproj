@@ -75,22 +75,20 @@
 		8B991A9416AE7CAE0031E60B /* JRCaptureData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A4E16AE7CAE0031E60B /* JRCaptureData.m */; };
 		8B991A9516AE7CAE0031E60B /* JRCaptureError.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A4F16AE7CAE0031E60B /* JRCaptureError.h */; };
 		8B991A9616AE7CAE0031E60B /* JRCaptureError.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5016AE7CAE0031E60B /* JRCaptureError.m */; };
-		8B991A9716AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5116AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.h */; };
-		8B991A9816AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5216AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.m */; };
 		8B991A9916AE7CAE0031E60B /* JRCaptureObject+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5316AE7CAE0031E60B /* JRCaptureObject+Internal.h */; };
 		8B991A9A16AE7CAE0031E60B /* JRCaptureObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5416AE7CAE0031E60B /* JRCaptureObject.h */; };
 		8B991A9B16AE7CAE0031E60B /* JRCaptureObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5516AE7CAE0031E60B /* JRCaptureObject.m */; };
 		8B991A9C16AE7CAE0031E60B /* JRCaptureTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5616AE7CAE0031E60B /* JRCaptureTypes.h */; };
 		8B991A9D16AE7CAE0031E60B /* JRCaptureUser+Extras.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5716AE7CAE0031E60B /* JRCaptureUser+Extras.h */; };
 		8B991A9E16AE7CAE0031E60B /* JRCaptureUser+Extras.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5816AE7CAE0031E60B /* JRCaptureUser+Extras.m */; };
-		8B991A9F16AE7CAE0031E60B /* JRCaptureWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5916AE7CAE0031E60B /* JRCaptureWebViewController.h */; };
-		8B991AA016AE7CAE0031E60B /* JRCaptureWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5A16AE7CAE0031E60B /* JRCaptureWebViewController.m */; };
 		8B991AA116AE7CAE0031E60B /* JRConventionalSigninViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5B16AE7CAE0031E60B /* JRConventionalSigninViewController.h */; };
 		8B991AA216AE7CAE0031E60B /* JRConventionalSigninViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5C16AE7CAE0031E60B /* JRConventionalSigninViewController.m */; };
 		8B991AA316AE7CAE0031E60B /* JREngageWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5D16AE7CAE0031E60B /* JREngageWrapper.h */; };
 		8B991AA416AE7CAE0031E60B /* JREngageWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5E16AE7CAE0031E60B /* JREngageWrapper.m */; };
 		8B991AA516AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5F16AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h */; };
 		8B991AA616AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A6016AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m */; };
+		8BE4BD471732527E00CF83C0 /* NSDictionary+QueryParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */; };
+		8BE4BD481732527E00CF83C0 /* NSDictionary+QueryParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -431,22 +429,20 @@
 		8B991A4E16AE7CAE0031E60B /* JRCaptureData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureData.m; sourceTree = "<group>"; };
 		8B991A4F16AE7CAE0031E60B /* JRCaptureError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureError.h; sourceTree = "<group>"; };
 		8B991A5016AE7CAE0031E60B /* JRCaptureError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureError.m; sourceTree = "<group>"; };
-		8B991A5116AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureJsWidgetWrapper.h; sourceTree = "<group>"; };
-		8B991A5216AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureJsWidgetWrapper.m; sourceTree = "<group>"; };
 		8B991A5316AE7CAE0031E60B /* JRCaptureObject+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JRCaptureObject+Internal.h"; sourceTree = "<group>"; };
 		8B991A5416AE7CAE0031E60B /* JRCaptureObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureObject.h; sourceTree = "<group>"; };
 		8B991A5516AE7CAE0031E60B /* JRCaptureObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureObject.m; sourceTree = "<group>"; };
 		8B991A5616AE7CAE0031E60B /* JRCaptureTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureTypes.h; sourceTree = "<group>"; };
 		8B991A5716AE7CAE0031E60B /* JRCaptureUser+Extras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JRCaptureUser+Extras.h"; sourceTree = "<group>"; };
 		8B991A5816AE7CAE0031E60B /* JRCaptureUser+Extras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "JRCaptureUser+Extras.m"; sourceTree = "<group>"; };
-		8B991A5916AE7CAE0031E60B /* JRCaptureWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureWebViewController.h; sourceTree = "<group>"; };
-		8B991A5A16AE7CAE0031E60B /* JRCaptureWebViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureWebViewController.m; sourceTree = "<group>"; };
 		8B991A5B16AE7CAE0031E60B /* JRConventionalSigninViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRConventionalSigninViewController.h; sourceTree = "<group>"; };
 		8B991A5C16AE7CAE0031E60B /* JRConventionalSigninViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRConventionalSigninViewController.m; sourceTree = "<group>"; };
 		8B991A5D16AE7CAE0031E60B /* JREngageWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JREngageWrapper.h; sourceTree = "<group>"; };
 		8B991A5E16AE7CAE0031E60B /* JREngageWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JREngageWrapper.m; sourceTree = "<group>"; };
 		8B991A5F16AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JRNSDate+ISO8601_CaptureDateTimeString.h"; sourceTree = "<group>"; };
 		8B991A6016AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "JRNSDate+ISO8601_CaptureDateTimeString.m"; sourceTree = "<group>"; };
+		8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+QueryParams.h"; sourceTree = "<group>"; };
+		8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+QueryParams.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1008,6 +1004,8 @@
 		8B991A2116AE7CAE0031E60B /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */,
+				8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */,
 				8B991A2216AE7CAE0031E60B /* CaptureUserModel */,
 				8B991A4816AE7CAE0031E60B /* debug_log.h */,
 				8B991A4916AE7CAE0031E60B /* JRCapture.h */,
@@ -1018,16 +1016,12 @@
 				8B991A4E16AE7CAE0031E60B /* JRCaptureData.m */,
 				8B991A4F16AE7CAE0031E60B /* JRCaptureError.h */,
 				8B991A5016AE7CAE0031E60B /* JRCaptureError.m */,
-				8B991A5116AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.h */,
-				8B991A5216AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.m */,
 				8B991A5316AE7CAE0031E60B /* JRCaptureObject+Internal.h */,
 				8B991A5416AE7CAE0031E60B /* JRCaptureObject.h */,
 				8B991A5516AE7CAE0031E60B /* JRCaptureObject.m */,
 				8B991A5616AE7CAE0031E60B /* JRCaptureTypes.h */,
 				8B991A5716AE7CAE0031E60B /* JRCaptureUser+Extras.h */,
 				8B991A5816AE7CAE0031E60B /* JRCaptureUser+Extras.m */,
-				8B991A5916AE7CAE0031E60B /* JRCaptureWebViewController.h */,
-				8B991A5A16AE7CAE0031E60B /* JRCaptureWebViewController.m */,
 				8B991A5B16AE7CAE0031E60B /* JRConventionalSigninViewController.h */,
 				8B991A5C16AE7CAE0031E60B /* JRConventionalSigninViewController.m */,
 				8B991A5D16AE7CAE0031E60B /* JREngageWrapper.h */,
@@ -1122,15 +1116,14 @@
 				8B991A9116AE7CAE0031E60B /* JRCaptureApidInterface.h in Headers */,
 				8B991A9316AE7CAE0031E60B /* JRCaptureData.h in Headers */,
 				8B991A9516AE7CAE0031E60B /* JRCaptureError.h in Headers */,
-				8B991A9716AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.h in Headers */,
 				8B991A9916AE7CAE0031E60B /* JRCaptureObject+Internal.h in Headers */,
 				8B991A9A16AE7CAE0031E60B /* JRCaptureObject.h in Headers */,
 				8B991A9C16AE7CAE0031E60B /* JRCaptureTypes.h in Headers */,
 				8B991A9D16AE7CAE0031E60B /* JRCaptureUser+Extras.h in Headers */,
-				8B991A9F16AE7CAE0031E60B /* JRCaptureWebViewController.h in Headers */,
 				8B991AA116AE7CAE0031E60B /* JRConventionalSigninViewController.h in Headers */,
 				8B991AA316AE7CAE0031E60B /* JREngageWrapper.h in Headers */,
 				8B991AA516AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h in Headers */,
+				8BE4BD471732527E00CF83C0 /* NSDictionary+QueryParams.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1229,13 +1222,12 @@
 				8B991A9216AE7CAE0031E60B /* JRCaptureApidInterface.m in Sources */,
 				8B991A9416AE7CAE0031E60B /* JRCaptureData.m in Sources */,
 				8B991A9616AE7CAE0031E60B /* JRCaptureError.m in Sources */,
-				8B991A9816AE7CAE0031E60B /* JRCaptureJsWidgetWrapper.m in Sources */,
 				8B991A9B16AE7CAE0031E60B /* JRCaptureObject.m in Sources */,
 				8B991A9E16AE7CAE0031E60B /* JRCaptureUser+Extras.m in Sources */,
-				8B991AA016AE7CAE0031E60B /* JRCaptureWebViewController.m in Sources */,
 				8B991AA216AE7CAE0031E60B /* JRConventionalSigninViewController.m in Sources */,
 				8B991AA416AE7CAE0031E60B /* JREngageWrapper.m in Sources */,
 				8B991AA616AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m in Sources */,
+				8BE4BD481732527E00CF83C0 /* NSDictionary+QueryParams.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
