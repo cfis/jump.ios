@@ -33,10 +33,10 @@
 
 
 #import <UIKit/UIKit.h>
-#import "SharedData.h"
+#import "BackplaneUtils.h"
 #import "JRCaptureObject.h"
 
-@interface RootViewController : UIViewController <DemoSignInDelegate, JRCaptureObjectDelegate>
+@interface RootViewController : UIViewController <JRCaptureSigninDelegate, JRCaptureObjectDelegate, UIAlertViewDelegate>
 - (IBAction)browseButtonPressed:(id)sender;
 - (IBAction)updateButtonPressed:(id)sender;
 - (IBAction)thirdButtonPressed:(id)sender;
@@ -50,4 +50,5 @@
 @property (weak) IBOutlet UIButton *captureWidgetButton;
 @property (weak) IBOutlet UIButton *signInButton;
 @property (weak) IBOutlet UIButton *signOutButton;
+@property(nonatomic, strong) NSMutableDictionary *customUi;
 @end

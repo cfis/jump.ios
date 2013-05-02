@@ -28,26 +28,71 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifdef DEBUG
-#define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-#define DLog(...)
-#endif
-
-#define ALog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-
+#import "debug_log.h"
 #import "JRCaptureError.h"
 #import "JSONKit.h"
 
-@implementation JRCaptureError
-{
+#define btwn(a, b, c) ((a >= b && a < c) ? YES : NO)
 
+NSString *const kJRCaptureErrorDomain = @"JRCapture.ErrorDomain";
+
+@interface JRCaptureError ()
+@property (nonatomic, retain) NSString *rawResponse;
+@property (nonatomic, retain) NSString *mergeToken;
+@property (nonatomic, retain) NSString *conflictedProvider;
+@property (nonatomic, retain) NSString *onProvider;
+@end
+
+@implementation JRCaptureError
+@synthesize rawResponse;
+@synthesize mergeToken;
+@synthesize conflictedProvider;
+@synthesize onProvider;
+
+- (id)initWithDomain:(NSString *)domain code:(NSInteger)code userInfo:(NSDictionary *)dict
+         rawResponse:(NSString *)rawResponse_ onProvider:(NSString *)onProvider_ mergeToken:(NSString *)mergeToken_
+{
+    self = [super initWithDomain:domain code:code userInfo:dict];
+    if (self)
+    {
+        self.rawResponse = rawResponse_;
+        self.onProvider = onProvider_;
+        self.mergeToken = mergeToken_;
+    }
+
+    return self;
 }
 
-NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
+- (BOOL)isMergeFlowError
+{
+    return self.code == 3380;
+}
 
+- (NSString *)existingProvider
+{
+    return [self.userInfo objectForKey:@"existing_provider"];
+}
 
-+ (NSError*)setError:(NSString*)error withCode:(NSInteger)code description:(NSString *)description andExtraFields:(NSDictionary *)extraFields
+@end
+
+@implementation JRCaptureError (JRCaptureError_Builders)
++ (JRCaptureError *)invalidApiResponseError:(NSString *)rawResponse_
+{
+    NSString *desc = [NSString stringWithFormat:@"The Capture API request response was not well formed"];
+    NSNumber *code = [NSNumber numberWithInteger:JRCaptureWrappedEngageErrorInvalidEndpointPayload];
+    NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:
+                                                 @"error", @"stat",
+                                                 @"invalid_endpoint_response", @"error",
+                                                 desc, @"error_description",
+                                                 code, @"code",
+                                                 rawResponse_, @"raw_response",
+                                                 nil];
+    return [JRCaptureError errorFromResult:result onProvider:nil mergeToken:nil];
+}
+
++ (JRCaptureError *)errorWithErrorString:(NSString *)error code:(NSInteger)code description:(NSString *)description
+                             extraFields:(NSDictionary *)extraFields rawResponse:(NSString *)rawResponse
+                              onProvider:(NSString *)onProvider mergeToken:(NSString *)mergeToken
 {
     ALog (@"An error occured (%d): %@", code, description);
 
@@ -58,83 +103,95 @@ NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
     for (NSString *key in [extraFields allKeys])
         [userInfo setObject:[extraFields objectForKey:key] forKey:key];
 
-    return [[[NSError alloc] initWithDomain:JRCaptureErrorDomain
-                                       code:code
-                                   userInfo:[NSDictionary dictionaryWithDictionary:userInfo]] autorelease];
+    return [[[JRCaptureError alloc] initWithDomain:kJRCaptureErrorDomain code:code
+                                          userInfo:[NSDictionary dictionaryWithDictionary:userInfo]
+                                       rawResponse:rawResponse onProvider:onProvider
+                                        mergeToken:mergeToken] autorelease];
 }
 
-#define btwn(a, b, c) ((a >= b && a < c) ? YES : NO)
-
-+ (NSError *)errorFromResult:(NSObject *)result
++ (JRCaptureError *)errorFromResult:(NSObject *)result onProvider:(NSString *)onProvider
+                         mergeToken:(NSString *)mergeToken
 {
     /* {"error_description":"/basicIpAddress was not a valid ip address.","stat":"error","code":200,"error":"invalid_argument","argument_name":"/basicIpAddress"} */
     NSDictionary *resultDictionary;
 
     if ([result isKindOfClass:[NSDictionary class]])
+    {
         resultDictionary = (NSDictionary *) result;
+    }
     else if ([result isKindOfClass:[NSString class]])
+    {
         resultDictionary = [(NSString *)result objectFromJSONString];
-    else /* Uh-oh!! */
+    }
+    else
+    {
         return nil;
+    }
 
     NSString *errorDescription = [resultDictionary objectForKey:@"error_description"];
-    NSString *error            = [resultDictionary objectForKey:@"error"];
-    NSNumber *code             = [resultDictionary objectForKey:@"code"];
-
+    NSString *errorString = [resultDictionary objectForKey:@"error"];
+    NSNumber *code = [resultDictionary objectForKey:@"code"];
+    NSString *rawResponse = [resultDictionary objectForKey:@"raw_response"];
     NSDictionary *extraFields = nil;
 
     if (btwn([code integerValue], GENERIC_ERROR_RANGE, LOCAL_APID_ERROR_RANGE))
-        return [self setError:error withCode:[code integerValue]
-                  description:errorDescription andExtraFields:nil];
+        return [self errorWithErrorString:errorString code:[code integerValue] description:errorDescription
+                              extraFields:nil rawResponse:rawResponse onProvider:onProvider mergeToken:nil];
 
     if (btwn([code integerValue], LOCAL_APID_ERROR_RANGE, APID_ERROR_RANGE))
-        return [self setError:error withCode:[code integerValue]
-                  description:errorDescription andExtraFields:[resultDictionary objectForKey:@"extraFields"]];
+        return [self errorWithErrorString:errorString code:[code integerValue] description:errorDescription
+                              extraFields:[resultDictionary objectForKey:@"extraFields"] rawResponse:rawResponse
+                               onProvider:nil mergeToken:nil];
 
-    if (btwn([code integerValue], CAPTURE_WRAPPED_ENGAGE_ERROR_RANGE, CAPTURE_WRAPPED_WEBVIEW_ERROR_RANGE))
-        return [self setError:error withCode:[code integerValue]
-                  description:errorDescription andExtraFields:nil];
-
-    if ([code integerValue] > CAPTURE_WRAPPED_WEBVIEW_ERROR_RANGE)
-        return [self setError:error withCode:[code integerValue]
-                  description:errorDescription andExtraFields:nil];
-
-    /* else if (btwn([code integerValue], APID_ERROR_RANGE, CAPTURE_WRAPPED_ENGAGE_ERROR_RANGE)) */
+    if ([code integerValue] > CAPTURE_WRAPPED_ENGAGE_ERROR_RANGE)
+        return [self errorWithErrorString:errorString code:[code integerValue] description:errorDescription
+                              extraFields:nil rawResponse:rawResponse onProvider:onProvider mergeToken:nil];
 
     switch ([code integerValue])
     {
         case 100: /* 'missing_argument' A required argument was not supplied. Extra fields: 'argument_name' */
         case 200: /* 'invalid_argument' The argument was malformed, or its value was invalid for some other reason. Extra fields: 'argument_name' */
-            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"argument_name"], @"argument_name", nil];
+            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"argument_name"],
+                                        @"argument_name", nil];
             break;
 
         case 223: /* 'unknown_attribute' An attribute does not exist. This can occur when trying to create or update a record, or when modifying an attribute. Extra fields: 'attribute_name' */
         case 233: /* 'attribute_exists' Attempted to create an attribute that already exists. Extra fields: 'attribute_name' */
         case 234: /* 'reserved_attribute' Attempted to modify a reserved attribute; can occur if you try to delete, rename, or write to a reserved attribute. Extra fields: 'attribute_name' */
-            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"attribute_name"], @"attribute_name", nil];
+            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"attribute_name"],
+                                        @"attribute_name", nil];
             break;
 
         case 221: /* 'unknown_application' The application id does not exist. Extra fields: 'application_id' */
-            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"application_id"], @"applicaiton_id", nil];
+            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"application_id"],
+                                        @"applicaiton_id", nil];
             break;
 
         case 222: /* 'unknown_entity_type' The entity type does not exist. Extra fields: 'type_name' */
         case 232: /* 'entity_type_exists' Attempted to create an entity type that already exists. Extra fields: 'type_name' */
-            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:[resultDictionary objectForKey:@"type_name"], @"type_name", nil];
+            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:
+                                                [resultDictionary objectForKey:@"type_name"], @"type_name", nil];
             break;
-
 
         case 330: /* 'timestamp_mismatch' The created or lastUpdated value does not match the supplied argument. Extra fields: 'attribute_name', 'actual_value', 'supplied_value' */
             extraFields = [NSDictionary dictionaryWithObjectsAndKeys:
                                                 [resultDictionary objectForKey:@"attribute_name"], @"attribute_name",
                                                 [resultDictionary objectForKey:@"actual_value"], @"actual_value",
-                                                [resultDictionary objectForKey:@"supplied_value"], @"supplied_value", nil];
+                                                [resultDictionary objectForKey:@"supplied_value"], @"supplied_value",
+                                                nil];
+            break;
+
+        case 380:
+            extraFields = [NSDictionary dictionaryWithObjectsAndKeys:
+                                                [resultDictionary objectForKey:@"existing_provider"],
+                                                @"existing_provider", nil];
             break;
 
         case 420: /* 'redirect_uri_mismatch' The redirectUri did not match. Occurs in the oauth/token API call with the authorization_code grant type. Extra fields: 'expected_value', 'supplied_value' */
             extraFields = [NSDictionary dictionaryWithObjectsAndKeys:
                                                 [resultDictionary objectForKey:@"expected_value"], @"expected_value",
-                                                [resultDictionary objectForKey:@"supplied_value"], @"supplied_value", nil];
+                                                [resultDictionary objectForKey:@"supplied_value"], @"supplied_value",
+                                                nil];
             break;
 
         case 201: /* 'duplicate_argument' Two or more supplied arguments may not have been included in the same call; for example, both id and uuid in entity.update. */
@@ -161,16 +218,22 @@ NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
             break;
     }
 
-    return [self setError:error withCode:([code integerValue] + APID_ERROR_RANGE)
-              description:errorDescription andExtraFields:extraFields];
+    return [self errorWithErrorString:errorString code:([code integerValue] + APID_ERROR_RANGE)
+                          description:errorDescription extraFields:extraFields rawResponse:rawResponse
+                           onProvider:onProvider mergeToken:mergeToken];
 }
+
+@end
+
+@implementation JRCaptureError (JRCaptureError_Helpers)
 
 + (NSDictionary *)invalidClassErrorForResult:(NSObject *)result
 {
     return [NSDictionary dictionaryWithObjectsAndKeys:
                              @"error", @"stat",
                              @"invalid_result", @"error",
-                             [NSString stringWithFormat:@"The result object was not a string or dictionary: %@", [result description]], @"error_description",
+                             [NSString stringWithFormat:@"The result object was not a string or dictionary: %@",
+                                       [result description]], @"error_description",
                              [NSNumber numberWithInteger:JRCaptureLocalApidErrorInvalidResultClass], @"code", nil];
 }
 
@@ -179,7 +242,8 @@ NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
     return [NSDictionary dictionaryWithObjectsAndKeys:
                              @"error", @"stat",
                              @"invalid_result", @"error",
-                             [NSString stringWithFormat:@"The result object did not have the expected stat: %@", [result description]], @"error_description",
+                             [NSString stringWithFormat:@"The result object did not have the expected stat: %@",
+                                       [result description]], @"error_description",
                              [NSNumber numberWithInteger:JRCaptureLocalApidErrorInvalidResultStat], @"code", nil];
 }
 
@@ -188,16 +252,18 @@ NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
     return [NSDictionary dictionaryWithObjectsAndKeys:
                              @"error", @"stat",
                              @"invalid_result", @"error",
-                             [NSString stringWithFormat:@"The result object did not have the expected data: %@", [result description]], @"error_description",
+                             [NSString stringWithFormat:@"The result object did not have the expected data: %@",
+                                       [result description]], @"error_description",
                              [NSNumber numberWithInteger:JRCaptureLocalApidErrorInvalidResultData], @"code", nil];
 }
 
-+ (NSDictionary *)missingAccessTokenInResult:(NSObject *)result
++ (NSDictionary *)missingAccessTokenInResult:(__unused NSObject *)result
 {
     return [NSDictionary dictionaryWithObjectsAndKeys:
                              @"error", @"stat",
                              @"missing_access_token", @"error",
-                             @"The result object did not have the access_token where the access token was expected", @"error_description",
+                             @"The result object did not have the access_token where the access token was expected",
+                             @"error_description",
                              [NSNumber numberWithInteger:JRCaptureLocalApidErrorMissingAccessToken], @"code", nil];
 }
 
@@ -206,8 +272,35 @@ NSString * JRCaptureErrorDomain = @"JRCapture.ErrorDomain";
     return [NSDictionary dictionaryWithObjectsAndKeys:
                              @"error", @"stat",
                              @"selector_unavailable", @"error",
-                             @"The result object did not have the access_token where the access token was expected", @"error_description",
+                             @"The result object did not have the access_token where the access token was expected",
+                             @"error_description",
                              [NSNumber numberWithInteger:JRCaptureLocalApidErrorSelectorNotAvailable], @"code",
                              @"lastUpdated", @"selectorName", nil];
 }
+@end
+
+@implementation NSError (JRCaptureError_Extensions)
+- (BOOL)isJRMergeFlowError
+{
+    return [self isKindOfClass:[JRCaptureError class]] && [((JRCaptureError *) self) isMergeFlowError];
+}
+
+- (NSString *)JRMergeFlowConflictedProvider
+{
+    if (![self isKindOfClass:[JRCaptureError class]] || ![self isJRMergeFlowError]) return nil;
+    return [((JRCaptureError *) self) conflictedProvider];
+}
+
+- (NSString *)JRMergeFlowExistingProvider
+{
+    if (![self isKindOfClass:[JRCaptureError class]] || ![self isJRMergeFlowError]) return nil;
+    return [((JRCaptureError *) self) existingProvider];
+}
+
+- (NSString *)JRMergeToken
+{
+    if (![self isKindOfClass:[JRCaptureError class]] || ![self isJRMergeFlowError]) return nil;
+    return [((JRCaptureError *) self) mergeToken];
+}
+
 @end

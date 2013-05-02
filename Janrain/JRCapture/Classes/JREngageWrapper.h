@@ -39,13 +39,8 @@
                             andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
                                             forDelegate:(id<JRCaptureSigninDelegate>)delegate;
 
-+ (void)startAuthenticationDialogOnProvider:(NSString*)provider
-               withCustomInterfaceOverrides:(NSDictionary*)customInterfaceOverrides
-                                forDelegate:(id<JRCaptureSigninDelegate>)delegate;
-
-#ifdef JRENGAGE_SHARING_WITH_CAPTURE
-+ (void)startSocialPublishingDialogWithActivity:(JRActivityObject*)activity
-                   withCustomInterfaceOverrides:(NSDictionary*)customInterfaceOverrides
-                                    forDelegate:(id<JRCaptureSharingDelegate>)delegate;
-#endif // JRENGAGE_SHARING_WITH_CAPTURE
++ (void)startAuthenticationDialogOnProvider:(NSString *)provider
+               withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                 mergeToken:(NSString *)mergeToken
+                                forDelegate:(id <JRCaptureSigninDelegate>)delegate;
 @end

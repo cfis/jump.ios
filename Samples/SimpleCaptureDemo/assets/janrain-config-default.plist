@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>default-config</key>
+    <string>test</string>
+
+    <key>test</key>
+    <dict>
+        <key>engageAppId</key>
+        <string>appcfamhnpkagijaeinl</string>
+        <key>captureDomain</key>
+        <string>mobile-dev.janraincapture.com</string>
+        <key>captureClientId</key>
+        <string>9vt2ej43mxyftkf68c3xthkm2rtweg8w</string>
+        <!--<key>captureFlowName</key>-->
+        <!--<string></string>-->
+        <key>captureFormName</key>
+        <string>signinForm</string>
+        <key>captureLocale</key>
+        <string>en-US</string>
+        <key>bpBusUrlString</key>
+        <string></string>
+        <key>liveFyreNetwork</key>
+        <string></string>
+        <key>liveFyreSiteId</key>
+        <string></string>
+        <key>liveFyreArticleId</key>
+        <string></string>
+    </dict>
+</dict>
+</plist>

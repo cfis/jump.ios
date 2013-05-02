@@ -28,31 +28,37 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#import "JRCapture.h"
+
 /**
  * @internal
  * Intended for internal use. Please see JRCapture.h
  */
 @interface JRCaptureData : NSObject
-@property(nonatomic, retain) id bpChannelUrl;
+@property(nonatomic, retain) NSString *bpChannelUrl;
+@property(nonatomic, readonly, retain) NSString *captureBaseUrl;
+@property(nonatomic, readonly, retain) NSString *clientId;
+@property(nonatomic, readonly, retain) NSString *accessToken;
+@property(nonatomic, readonly, retain) NSString *creationToken;
+@property(nonatomic, readonly, retain) NSString *captureLocale;
+@property(nonatomic, readonly, retain) NSString *captureFormName;
+@property(nonatomic, readonly, retain) NSString *captureFlowName;
+@property(nonatomic, readonly) JRConventionalSigninType captureTradSignInType;
 
-+ (void)setAccessToken:(NSString *)newAccessToken forUser:(NSString *)userId;
++ (void)setAccessToken:(NSString *)newAccessToken;
 + (void)setCreationToken:(NSString *)newCreationToken;
-+ (NSString *)accessTokenForUser:(NSString *)userId;
-+ (NSString *)accessToken;
-+ (NSString *)creationToken;
-+ (NSURL *)captureApidBaseUrl;
-+ (NSURL *)captureUIBaseUrl;
-+ (NSString *)clientId;
-+ (NSString *)entityTypeName;
-+ (void)setCaptureApidDomain:(NSString *)newCaptureApidDomain
-             captureUIDomain:(NSString *)newCaptureUIDomain
-                    clientId:(NSString *)newClientId
-           andEntityTypeName:(NSString *)newEntityTypeName;
-+ (NSString *)captureMobileEndpointUrl;
 
-+ (NSString *)getAccessToken;
++ (void)    setCaptureDomain:(NSString *)captureDomain captureClientId:(NSString *)clientId
+               captureLocale:(NSString *)captureLocale captureFormName:(NSString *)captureFormName
+             captureFlowName:(NSString *)captureFlowName
+captureTraditionalSignInType:(JRConventionalSigninType)tradSignInType;
+
++ (NSString *)captureMobileEndpointUrlWithMergeToken:(NSString *)mergeToken;
 
 + (void)clearSignInState;
 
-+ (void)setBackplaneChannelUrl:(NSString *)bpChannelUrl;
++ (JRCaptureData *)sharedCaptureData;
+
+- (NSString *)redirectUri;
+
 @end

@@ -33,55 +33,41 @@
  Date:   Tuesday, January 31, 2012
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifdef DEBUG
-#define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-#define DLog(...)
-#endif
-
-#define ALog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #import "JRCapture.h"
 
 #import "JREngageWrapper.h"
 #import "JRCaptureData.h"
-#import "JRCaptureJsWidgetWrapper.h"
 
 @implementation JRCapture
 
-+ (void)setEngageAppId:(NSString *)appId
-{
-    [JREngageWrapper configureEngageWithCaptureMobileEndpointUrlAndAppId:appId];
-}
-
 + (void)setBackplaneChannelUrl:(NSString *)backplaneChannelUrl
 {
-    [JRCaptureData setBackplaneChannelUrl:backplaneChannelUrl];
+    [JRCaptureData sharedCaptureData].bpChannelUrl = backplaneChannelUrl;
 }
 
-+ (void)setEngageAppId:(NSString *)appId
-     captureApidDomain:(NSString *)captureApidDomain
-       captureUIDomain:(NSString *)captureUIDomain
-              clientId:(NSString *)clientId
-     andEntityTypeName:(NSString *)entityTypeName
++ (void)      setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+             captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+             captureFlowName:(NSString *)captureFlowName
+             captureFormName:(NSString *)captureFormName
+captureTraditionalSignInType:(JRConventionalSigninType)tradSignInType
 {
-    [JRCaptureData setCaptureApidDomain:captureApidDomain
-                        captureUIDomain:captureUIDomain
-                               clientId:clientId
-                      andEntityTypeName:entityTypeName];
-    [JREngageWrapper configureEngageWithCaptureMobileEndpointUrlAndAppId:appId];
+    [JRCaptureData setCaptureDomain:captureDomain captureClientId:clientId
+                      captureLocale:captureLocale captureFormName:captureFormName
+                    captureFlowName:captureFlowName
+       captureTraditionalSignInType:tradSignInType];
+    [JREngageWrapper configureEngageWithCaptureMobileEndpointUrlAndAppId:engageAppId];
 }
 
-+ (NSString *)captureMobileEndpointUrl
++ (NSString *)captureMobileEndpointUrl __unused
 {
-    return [JRCaptureData captureMobileEndpointUrl];
+    return [JRCaptureData captureMobileEndpointUrlWithMergeToken:nil];
 }
 
 /**
  * Clears user sign-in state from the Capture Library
  * This includes:
  *  - access token
- *  - creation token
  *  - uuid
  * These are cleared from memory as well as from disk.
  *
@@ -94,48 +80,38 @@
     [JRCaptureData clearSignInState];
 }
 
-+ (void)setAccessToken:(NSString *)newAccessToken
++ (void)setAccessToken:(NSString *)newAccessToken __unused
 {
-    [JRCaptureData setAccessToken:newAccessToken forUser:nil];
+    [JRCaptureData setAccessToken:newAccessToken];
 }
 
-+ (NSString *)getAccessToken
++ (NSString *)getAccessToken __unused
 {
-    return [JRCaptureData getAccessToken];
+    return [JRCaptureData sharedCaptureData].accessToken;
 }
 
-+ (void)setCreationToken:(NSString *)newCreationToken
-{
-    [JRCaptureData setCreationToken:newCreationToken];
-}
-
-+ (void)startJsWidgetWithUrl:(NSString *)url
-{
-    [JRCaptureJsWidgetWrapper startJsWidgetWithUrl:url];
-}
-
-+ (void)startEngageSigninDialogForDelegate:(id <JRCaptureSigninDelegate>)delegate
++ (void)startEngageSigninDialogForDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
 {
     [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:JRConventionalSigninNone
                                          andCustomInterfaceOverrides:nil forDelegate:delegate];
 }
 
 + (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSigninType
-                                          forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                                          forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
 {
     [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:conventionalSigninType
                                          andCustomInterfaceOverrides:nil forDelegate:delegate];
 }
 
 + (void)startEngageSigninDialogOnProvider:(NSString *)provider
-                              forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                              forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
 {
-    [JREngageWrapper startAuthenticationDialogOnProvider:provider
-                            withCustomInterfaceOverrides:nil forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogOnProvider:provider withCustomInterfaceOverrides:nil mergeToken:nil
+                                             forDelegate:delegate];
 }
 
 + (void)startEngageSigninDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                                forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                                                forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
 {
     [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:JRConventionalSigninNone
                                          andCustomInterfaceOverrides:customInterfaceOverrides
@@ -151,41 +127,50 @@
 }
 
 + (void)startEngageSigninDialogOnProvider:(NSString *)provider
-               withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                forDelegate:(id <JRCaptureSigninDelegate>)delegate
+             withCustomInterfaceOverrides:(NSMutableDictionary *)customInterfaceOverrides
+                               mergeToken:(NSString *)mergeToken
+                              forDelegate:(id <JRCaptureSigninDelegate>)delegate
 {
     [JREngageWrapper startAuthenticationDialogOnProvider:provider
-                            withCustomInterfaceOverrides:customInterfaceOverrides forDelegate:delegate];
+                            withCustomInterfaceOverrides:customInterfaceOverrides mergeToken:mergeToken
+                                             forDelegate:delegate];
 }
 
-#ifdef JRENGAGE_SHARING_WITH_CAPTURE
-+ (void)startEngageSharingDialogWithActivity:(JRActivityObject *)activity
-                                    forDelegate:(id <JRCaptureSharingDelegate>)delegate
++ (void)startEngageSigninDialogOnProvider:(NSString *)provider
+               withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
 {
-    [JREngageWrapper startSocialPublishingDialogWithActivity:activity
-                                withCustomInterfaceOverrides:nil forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogOnProvider:provider
+                            withCustomInterfaceOverrides:customInterfaceOverrides mergeToken:nil
+                                             forDelegate:delegate];
 }
-
-+ (void)startEngageSharingDialogWithActivity:(JRActivityObject *)activity
-                   withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                    forDelegate:(id <JRCaptureSharingDelegate>)delegate
-{
-    [JREngageWrapper startSocialPublishingDialogWithActivity:activity
-                                withCustomInterfaceOverrides:customInterfaceOverrides forDelegate:delegate];
-}
-#endif // JRENGAGE_SHARING_WITH_CAPTURE
 
 + (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
                                withSigninType:(JRConventionalSigninType)conventionalSignInType
-                                  forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                                   mergeToken:(NSString *)mergeToken forDelegate:(id <JRCaptureSigninDelegate>)delegate
 {
     NSString *typeString = conventionalSignInType == JRConventionalSigninEmailPassword ? @"email" :
             conventionalSignInType == JRConventionalSigninUsernamePassword ? @"username" : nil;
     if (!typeString) return;
 
-    NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:user, typeString, password, @"password", nil];
+    NSMutableDictionary *d = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                                          user, typeString,
+                                                          password, @"password", nil];
+    if (mergeToken) [d setObject:mergeToken forKey:@"token"];
+
     [JRCaptureApidInterface signinCaptureUserWithCredentials:d ofType:typeString forDelegate:delegate withContext:nil];
 }
+
++ (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
+                               withSigninType:(JRConventionalSigninType)conventionalSignInType
+                                  forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused
+{
+    [self startCaptureConventionalSigninForUser:user withPassword:password
+                                 withSigninType:conventionalSignInType
+                                     mergeToken:nil
+                                    forDelegate:delegate];
+}
+
 
 - (void)dealloc
 {

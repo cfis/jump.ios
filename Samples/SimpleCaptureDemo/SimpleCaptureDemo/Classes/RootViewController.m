@@ -36,6 +36,9 @@
 #import "JREngage+CustomInterface.h"
 #import "CaptureProfileViewController.h"
 #import "ObjectDrillDownViewController.h"
+#import "AlertViewWithBlocks.h"
+#import "AppDelegate.h"
+
 
 @interface RootViewController ()
 - (void)configureButtons;
@@ -50,11 +53,15 @@
 @synthesize signInButton;
 @synthesize signOutButton;
 @synthesize shareWidgetButton;
+@synthesize customUi = _customUi;
+
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
+    self.customUi = [NSMutableDictionary dictionaryWithObject:self.navigationController
+                                                       forKey:kJRApplicationNavigationController];
     [self configureUserLabelAndIcon];
 }
 
@@ -63,14 +70,9 @@
     [self configureButtons];
 }
 
-- (BOOL)isUserSignedIn
-{
-    return [SharedData sharedData].captureUser != nil;
-}
-
 - (void)configureButtons
 {
-    if ([self isUserSignedIn])
+    if (appDelegate.captureUser)
     {
         signInButton.hidden = YES;
         signOutButton.hidden = NO;
@@ -87,21 +89,12 @@
     [self configureUserLabelAndIcon];
 }
 
-- (void)setButtonsEnabled:(BOOL)enabled
-{
-    [browseButton setEnabled:enabled];
-    [captureWidgetButton setEnabled:enabled];
-    [updateButton setEnabled:enabled];
-    [signInButton setEnabled:enabled];
-    [signOutButton setEnabled:enabled];
-}
-
 - (IBAction)browseButtonPressed:(id)sender
 {
     ObjectDrillDownViewController *drillDown =
         [[ObjectDrillDownViewController alloc] initWithNibName:@"ObjectDrillDownViewController"
                                                         bundle:[NSBundle mainBundle]
-                                                     forObject:[SharedData sharedData].captureUser
+                                                     forObject:appDelegate.captureUser
                                            captureParentObject:nil
                                                         andKey:@"CaptureUser"];
 
@@ -118,32 +111,58 @@
 
 - (IBAction)thirdButtonPressed:(id)sender
 {
-    [[SharedData sharedData] asyncFetchNewLiveFyreUserToken];
+    //UIViewController *testModal = [[UIViewController alloc] initWithNibName:nil bundle:nil];
+    //testModal.view = ([[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)]);
+    //testModal.view.backgroundColor = [UIColor redColor];
+    //
+    //UIButton *testButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    ////[testButton addTarget:self action:@selector(signInButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    //[testButton addTarget:self action:@selector(customNavTest) forControlEvents:UIControlEventTouchUpInside];
+    //[testButton setTitle:@"Show View" forState:UIControlStateNormal];
+    //testButton.frame = CGRectMake(80.0, 210.0, 160.0, 40.0);
+    //[testModal.view addSubview:testButton];
+    //
+    //testModal.modalPresentationStyle = UIModalPresentationFormSheet;
+    //[self presentModalViewController:testModal animated:YES];
 }
+
+//- (void)customNavTest
+//{
+//    UINavigationController * customNavController = [[UINavigationController alloc] init];
+//
+//    [customNavController setValue:[[UINavigationBar alloc] init] forKeyPath:@"navigationBar"];
+//
+//    NSMutableDictionary * interfaceOverrides = [[NSMutableDictionary alloc] init];
+//
+//    [interfaceOverrides setValue:customNavController forKey:kJRCustomModalNavigationController];
+//
+//    [JRCapture startEngageSigninDialogOnProvider:@"facebook" withCustomInterfaceOverrides:interfaceOverrides
+//                                     forDelegate:[SharedData sharedData]];
+//}
 
 - (IBAction)signInButtonPressed:(id)sender
 {
-    [self setButtonsEnabled:NO];
     currentUserProviderIcon.image = nil;
-    
-    NSDictionary *customInterface = [NSDictionary dictionaryWithObject:self.navigationController
-                                                                forKey:kJRApplicationNavigationController];
-    
-    [SharedData startAuthenticationWithCustomInterface:customInterface forDelegate:self];
+
+    [self signOutCurrentUser];
+
+    [JRCapture startEngageSigninDialogWithConventionalSignin:JRConventionalSigninEmailPassword
+                                 andCustomInterfaceOverrides:self.customUi
+                                                 forDelegate:self];
 }
 
 - (IBAction)signOutButtonPressed:(id)sender
 {
     currentUserLabel.text = @"No current user";
     currentUserProviderIcon.image = nil;
-    [SharedData signOutCurrentUser];
+    [self signOutCurrentUser];
     [self configureButtons];
 }
 
 - (void)configureUserLabelAndIcon
 {
-    if ([SharedData sharedData].captureUser)
-        currentUserLabel.text = [NSString stringWithFormat:@"Email: %@", [SharedData sharedData].captureUser.email];
+    if (appDelegate.captureUser)
+        currentUserLabel.text = [NSString stringWithFormat:@"Email: %@", appDelegate.captureUser.email];
     else
         currentUserLabel.text = @"No current user";
     [self configureProviderIcon];
@@ -151,24 +170,16 @@
 
 - (void)configureProviderIcon
 {
-    NSString *icon = [NSString stringWithFormat:@"icon_%@_30x30@2x.png", [SharedData sharedData].currentProvider];
+    NSString *icon = [NSString stringWithFormat:@"icon_%@_30x30@2x.png", appDelegate.currentProvider];
     currentUserProviderIcon.image = [UIImage imageNamed:icon];
-}
-
-#pragma mark DemoSignInDelegate messages
-- (void)engageSignInDidSucceed
-{
-    currentUserLabel.text = @"Signing in...";
-    [self configureProviderIcon];
 }
 
 - (void)captureSignInDidSucceed
 {
-    [self setButtonsEnabled:YES];
     [self configureButtons];
     [self configureUserLabelAndIcon];
 
-    if ([SharedData sharedData].isNotYetCreated || [SharedData sharedData].isNew)
+    if (appDelegate.isNotYetCreated || appDelegate.isNew)
     {
         CaptureProfileViewController *viewController = [[CaptureProfileViewController alloc]
             initWithNibName:@"CaptureProfileViewController" bundle:[NSBundle mainBundle]];
@@ -192,9 +203,11 @@
 {
     if ([error code] == JRCaptureErrorGenericBadPassword)
     {
-        [[[UIAlertView alloc] initWithTitle:@"Access Denied" message:@"Invalid password for email@address.com"
-                                  delegate:nil cancelButtonTitle:@"Dismiss"
-                         otherButtonTitles:nil] show];
+        [self handleBadPasswordError];
+    }
+    else if ([error isJRMergeFlowError])
+    {
+        [self handleMergeFlowError:error];
     }
     else
     {
@@ -208,10 +221,168 @@
     }
 }
 
+- (void)handleBadPasswordError
+{
+    [[[UIAlertView alloc] initWithTitle:@"Access Denied" message:@"Invalid password for email@address.com"
+                                  delegate:nil cancelButtonTitle:@"Dismiss"
+                         otherButtonTitles:nil] show];
+}
+
+- (void)handleMergeFlowError:(NSError *)error
+{
+    NSString *existingAccountProvider = [error JRMergeFlowExistingProvider];
+    void (^mergeAlertCompletion)(UIAlertView *, BOOL, NSInteger) =
+            ^(UIAlertView *alertView, BOOL cancelled, NSInteger buttonIndex)
+            {
+                if (cancelled) return;
+
+                if ([existingAccountProvider isEqualToString:@"capture"]) // Traditional sign-in required
+                {
+                    [self handleTradMerge:error];
+
+                }
+                else
+                {
+                    // Social sign-in required:
+                    [JRCapture startEngageSigninDialogOnProvider:existingAccountProvider
+                                    withCustomInterfaceOverrides:self.customUi
+                                                      mergeToken:[error JRMergeToken]
+                                                     forDelegate:self];
+                }
+            };
+
+    [self showMergeAlertDialog:existingAccountProvider mergeAlertCompletion:mergeAlertCompletion];
+
+}
+
+- (void)handleTradMerge:(NSError *)error
+{
+    void (^signInCompletion)(UIAlertView *, BOOL, NSInteger) =
+            ^(UIAlertView *alertView_, BOOL cancelled_, NSInteger buttonIndex_)
+            {
+                if (cancelled_) return;
+                NSString *user = [[alertView_ textFieldAtIndex:0] text];
+                NSString *password = [[alertView_ textFieldAtIndex:1] text];
+                [JRCapture startCaptureConventionalSigninForUser:user withPassword:password
+                                                  withSigninType:JRConventionalSigninEmailPassword
+                                                      mergeToken:[error JRMergeToken]
+                                                     forDelegate:self];
+            };
+
+    [[[AlertViewWithBlocks alloc] initWithTitle:@"Sign in" message:nil completion:signInCompletion
+                                          style:UIAlertViewStyleLoginAndPasswordInput
+                              cancelButtonTitle:@"Cancel"
+                              otherButtonTitles:@"Sign-in", nil] show];
+}
+
+- (void)showMergeAlertDialog:(NSString *)existingAccountProvider
+        mergeAlertCompletion:(void (^)(UIAlertView *, BOOL, NSInteger))mergeAlertCompletion
+{
+    NSString *captureAccountBrandPhrase = @"a SimpleCaptureDemo";
+    NSString *existingAccountProviderPhrase = [existingAccountProvider isEqualToString:@"capture"] ?
+            @"" : [NSString stringWithFormat:@"It is associated with your %@ account. ", existingAccountProvider];
+
+    NSString *message = [NSString stringWithFormat:@"There is already %@ account with that email address. %@ Tap "
+                                                           "'Merge' to sign-in with that account, and link the "
+                                                           "two.",
+                                                   captureAccountBrandPhrase,
+                                                   existingAccountProviderPhrase];
+
+    [[[AlertViewWithBlocks alloc] initWithTitle:@"Email address in use" message:message
+                                     completion:mergeAlertCompletion
+                                          style:UIAlertViewStyleDefault
+                              cancelButtonTitle:@"Cancel"
+                              otherButtonTitles:@"Merge", nil] show];
+}
+
+
 - (void)viewDidUnload
 {
     [self setShareWidgetButton:nil];
     [super viewDidUnload];
 }
+
+
+- (void)signOutCurrentUser
+{
+    appDelegate.currentProvider  = nil;
+    appDelegate.captureUser      = nil;
+
+    appDelegate.isNew         = NO;
+    appDelegate.isNotYetCreated = NO;
+
+    [appDelegate.prefs setObject:nil forKey:cJRCurrentProvider];
+    [appDelegate.prefs setObject:nil forKey:cJRCaptureUser];
+
+    appDelegate.engageSignInWasCanceled = NO;
+
+    [JRCapture clearSignInState];
+}
+
+- (void)engageSigninDidNotComplete
+{
+    DLog(@"");
+    appDelegate.engageSignInWasCanceled = YES;
+
+    [self engageSignInDidFailWithError:nil];
+}
+
+- (void)engageSigninDialogDidFailToShowWithError:(NSError *)error
+{
+    DLog(@"error: %@", [error description]);
+    [self engageSignInDidFailWithError:error];
+}
+
+- (void)engageAuthenticationDidFailWithError:(NSError *)error
+                                 forProvider:(NSString *)provider
+{
+    DLog(@"error: %@", [error description]);
+    [self engageSignInDidFailWithError:error];
+}
+
+- (void)captureAuthenticationDidFailWithError:(NSError *)error
+{
+    DLog(@"error: %@", [error description]);
+    [self captureSignInDidFailWithError:error];
+}
+
+- (void)engageSigninDidSucceedForUser:(NSDictionary *)engageAuthInfo
+                          forProvider:(NSString *)provider
+{
+    appDelegate.currentProvider = provider;
+    [appDelegate.prefs setObject:appDelegate.currentProvider forKey:cJRCurrentProvider];
+
+    currentUserLabel.text = @"Signing in...";
+    [self configureProviderIcon];
+
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+}
+
+- (void)captureAuthenticationDidSucceedForUser:(JRCaptureUser *)newCaptureUser
+                                        status:(JRCaptureRecordStatus)captureRecordStatus
+{
+    DLog(@"");
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+
+    if (captureRecordStatus == JRCaptureRecordNewlyCreated)
+        appDelegate.isNew = YES;
+    else
+        appDelegate.isNew = NO;
+
+    if (captureRecordStatus == JRCaptureRecordRequiresCreation)
+        appDelegate.isNotYetCreated = YES;
+    else
+        appDelegate.isNotYetCreated = NO;
+
+    appDelegate.captureUser = newCaptureUser;
+
+    [appDelegate.prefs setObject:[NSKeyedArchiver archivedDataWithRootObject:appDelegate.captureUser]
+                     forKey:cJRCaptureUser];
+
+    [self captureSignInDidSucceed];
+
+    appDelegate.engageSignInWasCanceled = NO;
+}
+
 
 @end

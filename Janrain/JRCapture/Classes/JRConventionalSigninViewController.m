@@ -32,14 +32,7 @@
  Date:   Tuesday, June 1, 2010
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifdef DEBUG
-#define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-#define DLog(...)
-#endif
-
-#define ALog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-
+#import "debug_log.h"
 #import "JRConventionalSignInViewController.h"
 #import "JREngageWrapper.h"
 #import "JRUserInterfaceMaestro.h"
@@ -62,7 +55,6 @@
 @synthesize wrapper;
 @synthesize delegate;
 @synthesize firstResponder;
-
 
 - (id)initWithConventionalSignInType:(JRConventionalSigninType)theSignInType titleString:(NSString *)theTitleString
                                                                                titleView:(UIView *)theTitleView
@@ -241,18 +233,12 @@
     if (!nameOrEmail) nameOrEmail = @"";
     if (!password) password = @"";
 
-    //    NSMutableString *errorMessage = [NSMutableString stringWithString:@"Please enter your "];
-//
-//    if (!nameTextField.text || [nameTextField.text isEqualToString:@""])
-//        [errorMessage appendString:self.signinType == JRConventionalSigninEmailPassword ? @"email address " : "username"];
-//
-//    if (!pwdTextField.text || [pwdTextField.text isEqualToString:@""])
-//        [errorMessage appendString:@"password"];
-
     NSString *const signInTypeString = (self.signInType == JRConventionalSigninEmailPassword) ? @"email" : @"username";
-    [JRCaptureApidInterface signinCaptureUserWithCredentials:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                                                   nameOrEmail, signInTypeString,
-                                                                                   password, @"password", nil]
+    NSDictionary *credentials = [NSDictionary dictionaryWithObjectsAndKeys:
+                                                      nameOrEmail, signInTypeString,
+                                                      password, @"password", nil];
+
+    [JRCaptureApidInterface signinCaptureUserWithCredentials:credentials
                                                       ofType:signInTypeString
                                                  forDelegate:self
                                                  withContext:nil];
@@ -267,23 +253,20 @@
 {
     [delegate hideLoading];
 
-    [wrapper authenticationDidReachTokenUrl:@"/oath/mobile_signin_username_password"
-                               withResponse:nil
-                                 andPayload:[result dataUsingEncoding:NSUTF8StringEncoding]
-                                forProvider:nil];
+    [wrapper authenticationDidReachTokenUrl:@"/oath/auth_native_traditional" withResponse:nil
+                                 andPayload:[result dataUsingEncoding:NSUTF8StringEncoding] forProvider:nil];
 
     [delegate authenticationDidComplete];
 }
 
 - (void)signinCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context
 {
-
     DLog(@"result: %@", [result description]);
     NSString const *type = self.signInType == JRConventionalSigninEmailPassword ? @"Email" : @"Username";
     NSString *title = [NSString stringWithFormat:@"Incorrect %@ or Password", type];
     NSString *const message = [result objectForKey:@"error"];
     UIAlertView *alertView = [[[UIAlertView alloc] initWithTitle:title
-                                                         message:message
+                                                         message:nil // MOB-73
                                                         delegate:nil
                                                cancelButtonTitle:@"Dismiss"
                                                otherButtonTitles:nil] autorelease];
