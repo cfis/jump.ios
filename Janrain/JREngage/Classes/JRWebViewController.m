@@ -36,6 +36,8 @@
 #import "JRSessionData.h"
 #import "JRInfoBar.h"
 #import "JREngageError.h"
+#import "JRUserInterfaceMaestro.h"
+#import "debug_log.h"
 
 
 #ifdef DEBUG
@@ -59,7 +61,7 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 @implementation JRWebViewController
 @synthesize myBackgroundView;
 @synthesize myWebView;
-@synthesize originalUserAgent;
+@synthesize originalCustomUserAgent;
 
 #pragma mark UIView overrides
 
@@ -126,12 +128,6 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 {
     DLog(@"");
 
-    if ([sessionData.currentProvider.name isEqualToString:@"yahoo"])
-    {
-        self.originalUserAgent = [[NSUserDefaults standardUserDefaults] stringForKey:@"UserAgent"];
-        [self setUserAgentDefault:iPhoneUserAgent];
-    }
-
     [super viewWillAppear:animated];
 
     self.contentSizeForViewInPopover = CGSizeMake(320, 416);
@@ -139,9 +135,47 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
     self.title = (sessionData.currentProvider) ? sessionData.currentProvider.friendlyName : @"Loading";
 }
 
+//+ (void)configureUserAgent
+//{
+//    NSString *customUa = nil;
+//    NSString *origCustomUa = [[NSUserDefaults standardUserDefaults] stringForKey:@"UserAgent"];
+//    customUa = [self getCustomUa];
+//
+//    if (customUa)
+//    {
+//        //self.originalCustomUserAgent = origCustomUa;
+//        [JRWebViewController setUserAgentDefault:customUa];
+//    }
+//}
+
++ (NSString *)getCustomUa
+{
+    NSString *customUa = nil;
+    JRSessionData *sessionData = [JRSessionData jrSessionData];
+    if ([sessionData.currentProvider.name isEqualToString:@"yahoo"])
+    {
+        customUa = iPhoneUserAgent;
+    }
+    else if (sessionData.currentProvider.customUserAgentString)
+    {
+        customUa = sessionData.currentProvider.customUserAgentString;
+    }
+    else if (IS_IPAD && (sessionData.currentProvider.usesPhoneUserAgentString ||
+            [sessionData.currentProvider.name isEqualToString:@"facebook"]))
+    {
+        UIWebView *dummy = [[[UIWebView alloc] initWithFrame:CGRectMake(0,0,0,0)] autorelease];
+        NSString *padUa = [dummy stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
+        customUa = [padUa stringByReplacingOccurrencesOfString:@"iPad" withString:@"iPhone"
+                                                       options:NSCaseInsensitiveSearch
+                                                         range:NSMakeRange(0, [padUa length])];
+    }
+    return customUa;
+}
+
 - (void)viewDidAppear:(BOOL)animated
 {
     DLog(@"");
+    DLog(@"%@", [myWebView stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"]);
     [super viewDidAppear:animated];
 
     /* We need to figure out if the user canceled authentication by hitting the back button or the cancel button,
@@ -213,9 +247,7 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 {
     DLog(@"");
 
-    if ([sessionData.currentProvider.name isEqualToString:@"yahoo"])
-        [self setUserAgentDefault:self.originalUserAgent];
-
+    //[JRWebViewController setUserAgentDefault:self.originalCustomUserAgent];
     [myWebView loadHTMLString:@"" baseURL:[NSURL URLWithString:@"/"]];
 
     [super viewDidDisappear:animated];
@@ -229,26 +261,25 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 
 #pragma mark custom implementation
 
-- (void)setUserAgentDefault:(NSString *)userAgent
-{
-    DLog(@"UA: %@", userAgent);
-    if (userAgent)
-    {
-        NSDictionary *uAdefault = [[NSDictionary alloc] initWithObjectsAndKeys:userAgent, @"UserAgent", nil];
-        [[NSUserDefaults standardUserDefaults] registerDefaults:uAdefault];
-        [uAdefault release];
-    }
-    else
-    {
-        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"UserAgent"];
-    }
-}
+//+ (void)setUserAgentDefault:(NSString *)userAgent
+//{
+//    DLog(@"UA: %@", userAgent);
+//    if (userAgent)
+//    {
+//        NSDictionary *uaDefault = [[NSDictionary alloc] initWithObjectsAndKeys:userAgent, @"UserAgent", nil];
+//        [[NSUserDefaults standardUserDefaults] registerDefaults:uaDefault];
+//        [uaDefault release];
+//    }
+//    else
+//    {
+//        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"UserAgent"];
+//    }
+//}
 
 - (void)fixPadWindowSize
 {
     DLog(@"");
-    //return;
-    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) return;
+    if (!IS_IPAD) return;
 
     if (!([sessionData.currentProvider.name isEqualToString:@"google"] ||
           [sessionData.currentProvider.name isEqualToString:@"yahoo"])) return;
@@ -448,24 +479,24 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 
 - (void)connectionWasStoppedWithTag:(id)userdata { }
 
-#define SKIP_THIS_WORK_AROUND 0
-#define WEBVIEW_SHOULDNT_LOAD 0
-- (BOOL)webviewShouldntLoadRequestDueToTheWindowsLiveFix:(NSURLRequest*)request
-{
-    if (![[sessionData currentProvider].name isEqualToString:@"live_id"])
-        return SKIP_THIS_WORK_AROUND;
-
-    if (connectionDataAlreadyDownloadedThis)
-    {
-        connectionDataAlreadyDownloadedThis = NO;
-        return SKIP_THIS_WORK_AROUND;
-    }
-
-    DLog("Sending request to connection manager: %@", request);
-
-    [JRConnectionManager createConnectionFromRequest:request forDelegate:self withTag:WINDOWS_LIVE_LOAD];
-    return YES;
-}
+//#define SKIP_THIS_WORK_AROUND 0
+//#define WEBVIEW_SHOULD_NOT_LOAD 0
+//- (BOOL)shouldWebViewNotLoadRequestDueToTheWindowsLiveBug:(NSURLRequest *)request
+//{
+//    if (![[sessionData currentProvider].name isEqualToString:@"live_id"])
+//        return SKIP_THIS_WORK_AROUND;
+//
+//    if (connectionDataAlreadyDownloadedThis)
+//    {
+//        connectionDataAlreadyDownloadedThis = NO;
+//        return SKIP_THIS_WORK_AROUND;
+//    }
+//
+//    DLog("Sending request to connection manager: %@", request);
+//
+//    [JRConnectionManager createConnectionFromRequest:request forDelegate:self withTag:WINDOWS_LIVE_LOAD];
+//    return YES;
+//}
 
 #pragma mark UIWebViewDelegate implementation
 
@@ -474,8 +505,15 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 {
     DLog(@"request: %@", [[request URL] absoluteString]);
 
-    NSString *mobileEndpointUrl = [NSString stringWithFormat:@"%@/signin/device", [sessionData baseUrl]];
+    NSString *customUa = [JRWebViewController getCustomUa];
+    if (customUa)
+    {
+        if ([request respondsToSelector:@selector(setValue:forHTTPHeaderField:)]) {
+            [((NSMutableURLRequest *) request) setValue:customUa forHTTPHeaderField:@"User-Agent"];
+        }
+    }
 
+    NSString *mobileEndpointUrl = [NSString stringWithFormat:@"%@/signin/device", [sessionData baseUrl]];
     if ([[[request URL] absoluteString] hasPrefix:mobileEndpointUrl])
     {
         DLog(@"request url has prefix: %@", [sessionData baseUrl]);
@@ -486,8 +524,8 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
         return NO;
     }
 
-    if ([self webviewShouldntLoadRequestDueToTheWindowsLiveFix:request])
-        return WEBVIEW_SHOULDNT_LOAD;
+    //if ([self shouldWebViewNotLoadRequestDueToTheWindowsLiveBug:request])
+    //    return WEBVIEW_SHOULD_NOT_LOAD;
 
     return YES;
 }
@@ -550,7 +588,7 @@ static NSString *const iPhoneUserAgent = @"Mozilla/5.0 (iPhone; U; CPU iPhone OS
 
     [customInterface release];
     [myBackgroundView release];
-    [originalUserAgent release];
+    [originalCustomUserAgent release];
     [myWebView release];
     [infoBar release];
 
