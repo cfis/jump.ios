@@ -42,6 +42,7 @@
 @class JRWebViewController;
 @class JRPublishActivityController;
 
+#define MODAL_SIZE_FRAME (CGRectMake(0, 0, 320, 548))
 #define JANRAIN_BLUE    ([UIColor colorWithRed:0.102 green:0.33 blue:0.48 alpha:1.0])
 #define JANRAIN_BLUE_20 ([UIColor colorWithRed:0.102 green:0.33 blue:0.48 alpha:0.2])
 #define IS_IPAD ((UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad))
@@ -51,6 +52,19 @@
 //#define IOS4_OR_ABOVE ([[[UIDevice currentDevice] systemVersion] compare:@"4.0" options:NSNumericSearch] >= NSOrderedSame)
 //#define IS_PORTRAIT (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
 //#define IS_LANDSCAPE (UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation))
+
+#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_6_0
+#  define JR_TEXT_ALIGN_CENTER (NSTextAlignmentCenter)
+#  define JR_TEXT_ALIGN_LEFT (NSTextAlignmentLeft)
+#  define JR_LINE_BREAK_MODE_TAIL_TRUNCATION (NSLineBreakByTruncatingTail)
+#  define JR_LINE_BREAK_MODE_WORD_WRAP (NSLineBreakByWordWrapping)
+#else
+#  define JR_TEXT_ALIGN_CENTER (UITextAlignmentCenter)
+#  define JR_TEXT_ALIGN_LEFT (UITextAlignmentLeft)
+#  define JR_LINE_BREAK_MODE_TAIL_TRUNCATION (UILineBreakModeTailTruncation)
+#  define JR_LINE_BREAK_MODE_WORD_WRAP (UILineBreakModeWordWrap)
+#endif
+
 
 typedef enum
 {
@@ -63,31 +77,31 @@ typedef enum
 @protocol JRExternalDialogControllerDelegate <NSObject>
 @optional
 - (void)authenticationDidComplete;
-- (void)authenticationDidCancel;
-- (void)authenticationDidFail;
+//- (void)authenticationDidCancel;
+//- (void)authenticationDidFail;
 - (void)showLoading;
 - (void)hideLoading;
 @end
 
 @interface JRUserInterfaceMaestro : NSObject <UIPopoverControllerDelegate>
 
-+ (JRUserInterfaceMaestro*)jrUserInterfaceMaestroWithSessionData:(JRSessionData*)newSessionData;
-+ (JRUserInterfaceMaestro*)sharedMaestro;
++ (JRUserInterfaceMaestro *)jrUserInterfaceMaestroWithSessionData:(JRSessionData *)newSessionData;
++ (JRUserInterfaceMaestro *)sharedMaestro;
 
 - (void)loadModalNavigationControllerWithViewController:(UIViewController *)rootViewController;
 - (void)loadApplicationNavigationControllerWithViewController:(UIViewController *)rootViewController;
-- (void)showAuthenticationDialogWithCustomInterface:(NSDictionary*)customizations;
-- (void)showPublishingDialogForActivityWithCustomInterface:(NSDictionary*)customizations;
+- (void)showAuthenticationDialogWithCustomInterface:(NSDictionary *)customizations;
+- (void)showPublishingDialogForActivityWithCustomInterface:(NSDictionary *)customizations;
 - (void)unloadUserInterfaceWithTransitionStyle:(UIModalTransitionStyle)style;
 
 - (void)authenticationRestarted;
 - (void)authenticationCompleted;
 - (void)authenticationFailed;
 - (void)authenticationCanceled;
-- (void)publishingRestarted;
+//- (void)publishingRestarted;
 - (void)publishingCompleted;
 - (void)publishingCanceled;
-- (void)publishingFailed;
+//- (void)publishingFailed;
 
 @property(copy) NSMutableDictionary *customInterfaceDefaults;
 @property(readonly) JRProvidersController *myProvidersController;
@@ -101,4 +115,5 @@ typedef enum
 - (void)setUpDialogPresentation;
 
 
+- (BOOL)canRotate;
 @end

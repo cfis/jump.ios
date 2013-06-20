@@ -34,6 +34,11 @@
 @interface JRCaptureUser (JRCaptureUser_Internal)
 + (id)captureUserObjectFromDictionary:(NSDictionary*)dictionary withPath:(NSString *)capturePath;
 - (void)decodeFromDictionary:(NSDictionary *)dictionary;
+
+- (NSMutableDictionary *)toFormFieldsForForm:(NSString *)formName withFlow:(NSDictionary *)flow;
+
++ (JRCaptureUser *)captureUserObjectWithPrefilledFields:(NSDictionary *)prefilledFields forForm:(NSString *)form
+                                                   flow:(NSDictionary *)flow;
 @end
 
 /**
@@ -42,7 +47,7 @@
  * Capture server or fetching the remote JRCaptureUser from the Capture server
  **/
 @protocol JRCaptureUserDelegate <JRCaptureObjectDelegate>
-
+@optional
 /**
  * Sent if a call to JRCaptureUser#fetchCaptureUserFromServerForDelegate:context:() succeeded
  *
@@ -72,6 +77,7 @@
  *   calling code. Use of the context is entirely optional and at your discretion.
  **/
 - (void)fetchUserDidFailWithError:(NSError *)error context:(NSObject *)context;
+
 @end
 
 /**
@@ -92,7 +98,7 @@
  *   asynchronous Capture methods to facilitate correlation of the response messages with the calling code. Use of the
  *   context is entirely optional and at your discretion.
  **/
-+ (void)fetchCaptureUserFromServerForDelegate:(id<JRCaptureUserDelegate>)delegate context:(NSObject *)context;
++ (void)fetchCaptureUserFromServerForDelegate:(id<JRCaptureUserDelegate>)delegate context:(NSObject *)context __unused;
 
 /**
  * @internal

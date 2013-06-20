@@ -36,7 +36,7 @@
 #import "BackplaneUtils.h"
 #import "JRCaptureObject.h"
 
-@interface RootViewController : UIViewController <JRCaptureSigninDelegate, JRCaptureObjectDelegate, UIAlertViewDelegate>
+@interface RootViewController : UIViewController <JRCaptureSignInDelegate, JRCaptureObjectDelegate, UIAlertViewDelegate>
 - (IBAction)browseButtonPressed:(id)sender;
 - (IBAction)updateButtonPressed:(id)sender;
 - (IBAction)thirdButtonPressed:(id)sender;
@@ -46,9 +46,9 @@
 @property (weak) IBOutlet UILabel *currentUserLabel;
 @property (weak) IBOutlet UIImageView *currentUserProviderIcon;
 @property (weak) IBOutlet UIButton *browseButton;
-@property (weak) IBOutlet UIButton *updateButton;
-@property (weak) IBOutlet UIButton *captureWidgetButton;
+@property (weak) IBOutlet UIButton *formButton;
+@property (weak) IBOutlet UIButton *thirdButton;
 @property (weak) IBOutlet UIButton *signInButton;
 @property (weak) IBOutlet UIButton *signOutButton;
-@property(nonatomic, strong) NSMutableDictionary *customUi;
+@property(nonatomic, strong) NSDictionary *customUi;
 @end

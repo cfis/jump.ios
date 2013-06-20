@@ -32,6 +32,7 @@
 #import "JRCaptureData.h"
 #import "JRCaptureApidInterface.h"
 #import "JSONKit.h"
+#import "JRCaptureObject+Internal.h"
 
 @interface JRCaptureUserApidHandler : NSObject <JRCaptureInterfaceDelegate>
 @end
@@ -42,7 +43,7 @@
     return [[[JRCaptureUserApidHandler alloc] init] autorelease];
 }
 
-- (void)getCaptureUserDidFailWithResult:(NSObject *)result context:(NSObject *)context
+- (void)getCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context
 {
     DLog(@"");
     NSDictionary *myContext = (NSDictionary *) context;
@@ -50,36 +51,36 @@
     id <JRCaptureUserDelegate> delegate = [myContext objectForKey:@"delegate"];
 
     if ([delegate respondsToSelector:@selector(fetchUserDidFailWithError:context:)])
-        [delegate fetchUserDidFailWithError:[JRCaptureError errorFromResult:result onProvider:nil mergeToken:nil]
+        [delegate fetchUserDidFailWithError:[JRCaptureError errorFromResult:result onProvider:nil engageToken:nil]
                                     context:callerContext];
 }
 
 - (void)getCaptureUserDidSucceedWithResult:(NSObject *)result context:(NSObject *)context
 {
     DLog(@"");
-    NSDictionary    *myContext     = (NSDictionary *)context;
-    //NSString        *capturePath   = [myContext objectForKey:@"capturePath"];
-    NSObject        *callerContext = [myContext objectForKey:@"callerContext"];
-    id<JRCaptureUserDelegate>
-                     delegate      = [myContext objectForKey:@"delegate"];
+    NSDictionary *myContext = (NSDictionary *) context;
+    NSObject *callerContext = [myContext objectForKey:@"callerContext"];
+    id <JRCaptureUserDelegate> delegate = [myContext objectForKey:@"delegate"];
 
     NSDictionary *resultDictionary;
     if ([result isKindOfClass:[NSString class]])
         resultDictionary = [(NSString *)result objectFromJSONString];
-    else /* Uh-oh!! */
-        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidClassErrorForResult:result] 
+    else
+        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidClassErrorDictForResult:result]
                                              context:context];
 
     if (!resultDictionary)
-        return [self createCaptureUserDidFailWithResult:[JRCaptureError invalidDataErrorForResult:result] 
-                                                context:context];
+        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidDataErrorDictForResult:result]
+                                             context:context];
 
     if (![((NSString *)[resultDictionary objectForKey:@"stat"]) isEqualToString:@"ok"])
-        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidStatErrorForResult:result] context:context];
+        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidStatErrorDictForResult:result]
+                                             context:context];
 
     NSDictionary *result_ = [resultDictionary objectForKey:@"result"];
     if (!result_ || ![result_ isKindOfClass:[NSDictionary class]])
-        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidDataErrorForResult:result] context:context];
+        return [self getCaptureUserDidFailWithResult:[JRCaptureError invalidDataErrorDictForResult:result]
+                                             context:context];
 
     JRCaptureUser *captureUser = [JRCaptureUser captureUserObjectFromDictionary:result_];
 
@@ -90,7 +91,8 @@
 
 @implementation JRCaptureUser (JRCaptureUser_Extras)
 
-+ (void)fetchCaptureUserFromServerForDelegate:(id <JRCaptureUserDelegate>)delegate context:(NSObject *)context
++ (void)fetchCaptureUserFromServerForDelegate:(id<JRCaptureUserDelegate>)delegate
+                                      context:(NSObject *)context __unused
 {
     DLog(@"");
     NSDictionary *newContext = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -108,15 +110,140 @@
     return [JRCaptureUser captureUserObjectFromDictionary:dictionary withPath:@""];
 }
 
-+ (void)testCaptureUserApidHandlerGetCaptureUserDidFailWithResult:(NSObject *)result context:(NSObject *)context
++ (void)testCaptureUserApidHandlerGetCaptureUserDidFailWithResult:(NSDictionary *)result
+                                                          context:(NSObject *)context __unused
 {
     [[JRCaptureUserApidHandler captureUserApidHandler] getCaptureUserDidFailWithResult:result context:context];
 }
 
-+ (void)testCaptureUserApidHandlerGetCaptureUserDidSucceedWithResult:(NSObject *)result context:(NSObject *)context
++ (void)testCaptureUserApidHandlerGetCaptureUserDidSucceedWithResult:(NSDictionary *)result
+                                                             context:(NSObject *)context __unused
 {
     [[JRCaptureUserApidHandler captureUserApidHandler] getCaptureUserDidSucceedWithResult:result context:context];
 }
 
 @end
 
+@interface NSArray (JRArrayExtensions)
+- (NSArray *)tail;
+@end
+
+@implementation JRCaptureUser (JRCaptureUser_Internal)
+- (NSMutableDictionary *)toFormFieldsForForm:(NSString *)formName withFlow:(NSDictionary *)flow
+{
+    if (!formName || !flow) return nil;
+    NSMutableDictionary *retval = [NSMutableDictionary dictionary];
+    NSDictionary *form = [[flow objectForKey:@"fields"] objectForKey:formName];
+    NSArray *fieldNames = [form objectForKey:@"fields"];
+    NSArray *fields = [[flow objectForKey:@"fields"] objectsForKeys:fieldNames notFoundMarker:[NSNull null]];
+    for (NSObject *field in fields)
+    {
+        if (![field isKindOfClass:[NSDictionary class]])
+        {
+            ALog(@"unrecognized field defn: %@", [field description]);
+            continue;
+        }
+
+        NSString *formFieldValue = [self valueForAttrByDotPath:[(NSDictionary *) field objectForKey:@"schemaId"]];
+        if (formFieldValue)
+        {
+            [retval setObject:formFieldValue forKey:[fieldNames objectAtIndex:[fields indexOfObject:field]]];
+        }
+    }
+
+    return retval;
+}
+
+- (NSString *)valueForAttrByDotPath:(NSString *)dotPath
+{
+
+    NSArray *pathComponents = [dotPath componentsSeparatedByString:@"."];
+    return [JRCaptureUser valueForAttrByDotPathComponents:pathComponents userDict:[self toDictionaryForEncoder:NO]];
+}
+
++ (NSString *)valueForAttrByDotPathComponents:(NSArray *)dotPathComponents userDict:(id)userDict
+{
+    if ([dotPathComponents count] == 0) return [self jsonStringForValue:userDict];
+
+    if (![userDict isKindOfClass:[NSDictionary class]]) return nil;
+    NSDictionary *userDict_ = userDict;
+    NSString *dotPathComponent = [dotPathComponents objectAtIndex:0];
+    NSArray *tail = [dotPathComponents tail];
+    NSArray *pluralSplit = [dotPathComponent componentsSeparatedByString:@"#"];
+    if ([pluralSplit count] > 1)
+    {
+        id val = [userDict_ objectForKey:[pluralSplit objectAtIndex:0]];
+        if (![val isKindOfClass:[NSArray class]]) return nil;
+        for (id elt in val)
+        {
+            if (![elt isKindOfClass:[NSDictionary class]]) return nil;
+            if ([[elt objectForKey:@"id"] isEqual:[pluralSplit objectAtIndex:1]])
+            {
+                return [self valueForAttrByDotPathComponents:tail userDict:elt];
+            }
+        }
+        return nil;
+    }
+    else
+    {
+        id val = [userDict_ objectForKey:dotPathComponent];
+        return [self valueForAttrByDotPathComponents:tail userDict:val];
+    }
+}
+
++ (NSString *)jsonStringForValue:(id)userDict
+{
+    if (userDict == [NSNull null]) return nil;
+    // This hack will get us the string-ified version of a JSON-able value.
+    NSError *ignore = nil;
+    NSArray *thisIsAHack = [NSArray arrayWithObject:userDict];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:thisIsAHack options:(NSJSONWritingOptions) 0
+                                                             error:&ignore];
+    NSString *jsonString = [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] autorelease];
+    if ([jsonString characterAtIndex:1] == '"')
+        {
+            return [jsonString substringWithRange:NSMakeRange(2, [jsonString length] - 4)];
+        }
+        else
+        {
+            return [jsonString substringWithRange:NSMakeRange(1, [jsonString length] - 2)];
+        }
+}
+
++ (JRCaptureUser *)captureUserObjectWithPrefilledFields:(NSDictionary *)prefilledFields forForm:(NSString *)form
+                                                   flow:(NSDictionary *)flow
+{
+    NSMutableDictionary *preregAttributes = [NSMutableDictionary dictionary];
+    for (id key in prefilledFields)
+    {
+        id value = [prefilledFields objectForKey:key];
+        if ([value isEqual:[NSNull null]]) continue;
+        NSDictionary *fieldDefn = [self fieldDictForFieldName:key flow:flow];
+        if ([fieldDefn isKindOfClass:[NSDictionary class]] && [fieldDefn objectForKey:@"schemaId"])
+        {
+            [preregAttributes setObject:value forKey:[fieldDefn objectForKey:@"schemaId"]];
+        }
+    }
+    return [JRCaptureUser captureUserObjectFromDictionary:preregAttributes];
+}
+
++ (NSDictionary *)fieldDictForFieldName:(NSString *)fieldName flow:(NSDictionary *)flow
+{
+    NSDictionary *fields = [flow objectForKey:@"fields"];
+    for (id key in fields)
+    {
+        if ([key isEqual:fieldName]) return [fields objectForKey:key];
+    }
+    return nil;
+}
+
+@end
+
+@implementation NSArray (JRArrayExtensions)
+- (NSArray *)tail
+{
+    if ([self count] == 0) return nil;
+    if ([self count] == 1) return @[];
+    return [self subarrayWithRange:NSMakeRange(1, [self count] - 1)];
+}
+@end

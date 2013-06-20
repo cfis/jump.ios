@@ -31,19 +31,17 @@
  Date:   Thursday, January 26, 2012
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
+#import "debug_log.h"
 #import "JRCaptureObject.h"
 #import "JRCaptureUser+Extras.h"
 #import "CaptureProfileViewController.h"
-#import "BackplaneUtils.h"
-
-#include "debug_log.h"
 #import "AppDelegate.h"
+#import "JRCapture.h"
+#import "Utils.h"
 
-@interface CaptureProfileViewController ()
-@property (nonatomic, retain) id             firstResponder;
-@property (nonatomic, retain) NSDate        *myBirthdate;
-@property (nonatomic, strong) JRCaptureUser *captureUser;
+@interface CaptureProfileViewController () <JRCaptureSignInDelegate>
+@property(nonatomic, retain) id firstResponder;
+@property(nonatomic, retain) NSDate *myBirthdate;
 @end
 
 @implementation CaptureProfileViewController
@@ -55,7 +53,6 @@
 @synthesize myKeyboardToolbar;
 @synthesize firstResponder;
 @synthesize myBirthdate;
-@synthesize captureUser;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -64,8 +61,6 @@
     return self;
 }
 
-#pragma mark - View lifecycle
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -73,31 +68,30 @@
     [myAboutMeTextView setInputAccessoryView:myKeyboardToolbar];
     [myEmailTextField setInputAccessoryView:myKeyboardToolbar];
 
-    self.captureUser = appDelegate.captureUser;
+    if (appDelegate.captureUser.email)
+        myEmailTextField.text  = appDelegate.captureUser.email;
 
-    if (captureUser.email)
-        myEmailTextField.text  = captureUser.email;
+    if (appDelegate.captureUser.aboutMe)
+        myAboutMeTextView.text = appDelegate.captureUser.aboutMe;
 
-    if (captureUser.aboutMe)
-        myAboutMeTextView.text = captureUser.aboutMe;
+    char genderSegment = ([self isFemaleGender:[appDelegate.captureUser.gender lowercaseString]]) ? 0 : 1;
+    [myGenderIdentitySegControl setSelectedSegmentIndex:genderSegment];
 
-    if ([[captureUser.gender lowercaseString] isEqualToString:[@"F" lowercaseString]] ||
-        [[captureUser.gender lowercaseString] isEqualToString:[@"female" lowercaseString]] ||
-        [[captureUser.gender lowercaseString] isEqualToString:[@"girl" lowercaseString]] ||
-        [[captureUser.gender lowercaseString] isEqualToString:[@"woman" lowercaseString]]) /* Blah, blah, loose test... */
+    if (appDelegate.captureUser.birthday)
     {
-        [myGenderIdentitySegControl setSelectedSegmentIndex:0];
-    }
-    else
-    {
-        [myGenderIdentitySegControl setSelectedSegmentIndex:1];
-    }
-
-    if (captureUser.birthday)
-    {
-        [myDatePicker setDate:captureUser.birthday];
+        [myDatePicker setDate:appDelegate.captureUser.birthday];
         [self pickerChanged];
     }
+
+    self.myDoneButton.title = @"Update";
+}
+
+- (BOOL)isFemaleGender:(NSString *)gender
+{
+    return [gender isEqualToString:[@"F" lowercaseString]] ||
+        [gender isEqualToString:[@"female" lowercaseString]] ||
+        [gender isEqualToString:[@"girl" lowercaseString]] ||
+        [gender isEqualToString:[@"woman" lowercaseString]];
 }
 
 - (void)scrollUpBy:(NSInteger)scrollOffset
@@ -134,16 +128,13 @@
     DLog(@"");
     [myBirthdayButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
 
-    static NSDateFormatter *dateFormatter = nil;
-    if (!dateFormatter)
-    {
-        dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
-        [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-        [dateFormatter setDateFormat:@"MM/dd/yyyy"];
-    }
+    NSDateFormatter *dateFormatter = nil;
+    dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
+    [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
+    [dateFormatter setDateFormat:@"MM/dd/yyyy"];
 
-    NSDate   *pickerDate = myDatePicker.date;
+    NSDate *pickerDate = myDatePicker.date;
     NSString *dateString = [dateFormatter stringFromDate:pickerDate];
 
     [myBirthdayButton setTitle:dateString forState:UIControlStateNormal];
@@ -159,19 +150,26 @@
 
 - (IBAction)doneButtonPressed:(id)sender
 {
-    captureUser.aboutMe  = myAboutMeTextView.text;
-    captureUser.birthday = myBirthdate;
-    captureUser.email    = myEmailTextField.text;
+    appDelegate.captureUser.aboutMe  = myAboutMeTextView.text;
+    appDelegate.captureUser.birthday = myBirthdate;
+    appDelegate.captureUser.email    = myEmailTextField.text;
 
     if (myGenderIdentitySegControl.selectedSegmentIndex == 0)
-        captureUser.gender = @"female";
+        appDelegate.captureUser.gender = @"female";
     else if (myGenderIdentitySegControl.selectedSegmentIndex == 1)
-        captureUser.gender = @"male";
+        appDelegate.captureUser.gender = @"male";
 
-    //if ([SharedData sharedData].isNotYetCreated)
-    //    [captureUser createOnCaptureForDelegate:self context:nil];
-    //else
-        [captureUser updateOnCaptureForDelegate:self context:nil];
+    [appDelegate.captureUser updateOnCaptureForDelegate:self context:nil];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    if (appDelegate.isNotYetCreated == YES)
+    {
+        appDelegate.isNotYetCreated = NO;
+        appDelegate.captureUser = nil;
+    }
 }
 
 #define ABOUT_ME_TEXT_VIEW_TAG 20
@@ -195,67 +193,28 @@
     [self scrollBack];
 }
 
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text { return YES; }
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    return YES;
+}
 - (void)textViewDidChange:(UITextView *)textView { }
 - (void)textViewDidChangeSelection:(UITextView *)textView { }
 - (BOOL)textViewShouldBeginEditing:(UITextView *)textView { return YES; }
 - (BOOL)textViewShouldEndEditing:(UITextView *)textView { return YES; }
 
-- (void)handleSuccessWithMessage:(NSString *)message
-{
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Success"
-                                                     message:message
-                                                    delegate:nil
-                                           cancelButtonTitle:nil
-                                           otherButtonTitles:@"OK", nil];
-    [alert show];
-
-    [self.navigationController popViewControllerAnimated:YES];
-
-    [appDelegate saveCaptureUser];
-}
-
-- (void)handleFailureWithMessage:(NSString *)message
-{
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Failure"
-                                                     message:message
-                                                    delegate:nil
-                                           cancelButtonTitle:@"Dismiss"
-                                           otherButtonTitles:nil];
-    [alert show];
-
-//    [self.navigationController popViewControllerAnimated:YES];
-//
-//    [SharedData saveCaptureUser];
-}
-
-- (void)createDidSucceedForUser:(JRCaptureUser *)user context:(NSObject *)context
-{
-    [self handleSuccessWithMessage:@"Profile created"];
-}
-
-- (void)createDidFailForUser:(JRCaptureUser *)user withError:(NSError *)error context:(NSObject *)context
-{
-    [self handleFailureWithMessage:@"Profile not created"];
-}
-
 - (void)updateDidSucceedForObject:(JRCaptureObject *)object context:(NSObject *)context
 {
-    [self handleSuccessWithMessage:@"Profile updated"];
+    [Utils handleSuccessWithTitle:@"Profile updated" message:nil forVc:self];
 }
 
 - (void)updateDidFailForObject:(JRCaptureObject *)object withError:(NSError *)error context:(NSObject *)context
 {
-    [self handleFailureWithMessage:@"Profile not updated"];
+    [Utils handleFailureWithTitle:@"Profile not updated" message:nil];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
-
-- (void)didReceiveMemoryWarning { [super didReceiveMemoryWarning]; }
-
-- (void)viewDidUnload { [super viewDidUnload]; }
 
 @end

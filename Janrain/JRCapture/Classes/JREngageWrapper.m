@@ -40,17 +40,17 @@ typedef enum
 } JREngageDialogState;
 
 @interface JREngageWrapper ()
-@property (retain) NSString *mergeToken;
-@property (retain) JRConventionalSignInViewController *nativeSigninViewController;
-@property (retain) id<JRCaptureSigninDelegate> delegate;
-@property          JREngageDialogState dialogState;
+@property(retain) NSString *engageToken;
+@property(retain) JRConventionalSignInViewController *nativeSigninViewController;
+@property(retain) id <JRCaptureSignInDelegate> delegate;
+@property JREngageDialogState dialogState;
 @end
 
 @implementation JREngageWrapper
 @synthesize nativeSigninViewController;
 @synthesize delegate;
 @synthesize dialogState;
-@synthesize mergeToken;
+@synthesize engageToken;
 
 static JREngageWrapper *singleton = nil;
 
@@ -64,7 +64,7 @@ static JREngageWrapper *singleton = nil;
 + (JREngageWrapper *)singletonInstance
 {
     if (singleton == nil) {
-        singleton = [((JREngageWrapper*)[super allocWithZone:NULL]) init];
+        singleton = [((JREngageWrapper *)[super allocWithZone:NULL]) init];
     }
 
     return singleton;
@@ -75,7 +75,7 @@ static JREngageWrapper *singleton = nil;
     return [[self singletonInstance] retain];
 }
 
-- (id)copyWithZone:(__unused NSZone *)zone
+- (id)copyWithZone:(__unused NSZone *)zone __unused
 {
     return self;
 }
@@ -97,16 +97,17 @@ static JREngageWrapper *singleton = nil;
     return self;
 }
 
-+ (void)configureEngageWithCaptureMobileEndpointUrlAndAppId:(NSString *)appId
++ (void)configureEngageWithAppId:(NSString *)appId customIdentityProviders:(NSDictionary *)customProviders
 {
     [JREngage setEngageAppId:appId tokenUrl:nil andDelegate:[JREngageWrapper singletonInstance]];
+    JREngage.customProviders = customProviders;
 }
 
-+ (void)startAuthenticationDialogWithConventionalSignIn:(JRConventionalSigninType)nativeSigninType
++ (void)startAuthenticationDialogWithConventionalSignIn:(JRConventionalSigninType)nativeSignInType
                             andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                            forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                                            forDelegate:(id <JRCaptureSignInDelegate>)delegate
 {
-    [JREngage updateTokenUrl:[JRCaptureData captureMobileEndpointUrlWithMergeToken:nil]];
+    [JREngage updateTokenUrl:[JRCaptureData captureTokenUrlWithMergeToken:nil]];
 
     JREngageWrapper *wrapper = [JREngageWrapper singletonInstance];
     [wrapper setDelegate:delegate];
@@ -115,45 +116,50 @@ static JREngageWrapper *singleton = nil;
     NSMutableDictionary *expandedCustomInterfaceOverrides =
             [NSMutableDictionary dictionaryWithDictionary:customInterfaceOverrides];
 
-    if (nativeSigninType != JRConventionalSigninNone)
+    if (nativeSignInType != JRConventionalSigninNone)
     {
-        NSString *nativeSignInTitleString =
-                ([expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] ?
-                        [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] :
-                        (nativeSigninType == JRConventionalSigninEmailPassword ?
-                                @"Sign In With Your Email and Password" :
-                                @"Sign In With Your Username and Password"));
-
-        if (![expandedCustomInterfaceOverrides objectForKey:kJRProviderTableSectionHeaderTitleString])
-            [expandedCustomInterfaceOverrides setObject:@"Sign In With a Social Provider"
-                                                 forKey:kJRProviderTableSectionHeaderTitleString];
-
-        UIView *const titleView = [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleView];
-        JRConventionalSignInViewController *controller =
-                [JRConventionalSignInViewController conventionalSignInViewController:nativeSigninType
-                                                                         titleString:nativeSignInTitleString
-                                                                           titleView:titleView
-                                                                       engageWrapper:wrapper];
-        [wrapper setNativeSigninViewController:controller];
-
-        [expandedCustomInterfaceOverrides setObject:[wrapper nativeSigninViewController].view
-                                             forKey:kJRProviderTableHeaderView];
-
-        [expandedCustomInterfaceOverrides setObject:[wrapper nativeSigninViewController]
-                                             forKey:kJRCaptureConventionalSigninViewController];
+        [self configureTradSignIn:nativeSignInType expandedCustomInterfaceOverrides:expandedCustomInterfaceOverrides];
     }
 
-    [JREngage showAuthenticationDialogWithCustomInterfaceOverrides:
-                      [NSDictionary dictionaryWithDictionary:expandedCustomInterfaceOverrides]];
+    [JREngage showAuthenticationDialogWithCustomInterfaceOverrides:expandedCustomInterfaceOverrides];
+}
+
++ (void)     configureTradSignIn:(JRConventionalSigninType)nativeSigninType
+expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceOverrides
+{
+    NSString *nativeSignInTitleString =
+            ([expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] ?
+                    [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] :
+                    (nativeSigninType == JRConventionalSigninEmailPassword ?
+                            @"Sign In With Your Email and Password" :
+                            @"Sign In With Your Username and Password"));
+
+    if (![expandedCustomInterfaceOverrides objectForKey:kJRProviderTableSectionHeaderTitleString])
+        [expandedCustomInterfaceOverrides setObject:@"Sign In With a Social Provider"
+                                             forKey:kJRProviderTableSectionHeaderTitleString];
+
+    UIView *const titleView = [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleView];
+    JRConventionalSignInViewController *controller =
+            [JRConventionalSignInViewController conventionalSignInViewController:nativeSigninType
+                                                                     titleString:nativeSignInTitleString
+                                                                       titleView:titleView
+                                                                   engageWrapper:singleton];
+    singleton.nativeSigninViewController = controller;
+
+    [expandedCustomInterfaceOverrides setObject:[singleton nativeSigninViewController].view
+                                         forKey:kJRProviderTableHeaderView];
+
+    [expandedCustomInterfaceOverrides setObject:[singleton nativeSigninViewController]
+                                         forKey:kJRCaptureConventionalSigninViewController];
 }
 
 
 + (void)startAuthenticationDialogOnProvider:(NSString *)provider
                withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
                                  mergeToken:(NSString *)mergeToken
-                                forDelegate:(id <JRCaptureSigninDelegate>)delegate
+                                forDelegate:(id <JRCaptureSignInDelegate>)delegate
 {
-    [JREngage updateTokenUrl:[JRCaptureData captureMobileEndpointUrlWithMergeToken:mergeToken]];
+    [JREngage updateTokenUrl:[JRCaptureData captureTokenUrlWithMergeToken:mergeToken]];
 
     [[JREngageWrapper singletonInstance] setDelegate:delegate];
     [[JREngageWrapper singletonInstance] setDialogState:JREngageDialogStateAuthentication];
@@ -166,12 +172,13 @@ static JREngageWrapper *singleton = nil;
     [JREngage updateTokenUrl:nil];
     self.delegate = nil;
     self.nativeSigninViewController = nil;
-    self.mergeToken = nil;
+    self.engageToken = nil;
 }
 
 - (void)authenticationCallToTokenUrl:(NSString *)tokenUrl didFailWithError:(NSError *)error
                          forProvider:(NSString *)provider
 {
+    DLog();
     if ([delegate respondsToSelector:@selector(captureAuthenticationDidFailWithError:)])
         [delegate captureAuthenticationDidFailWithError:error];
 
@@ -180,6 +187,7 @@ static JREngageWrapper *singleton = nil;
 
 - (void)authenticationDidFailWithError:(NSError *)error forProvider:(NSString *)provider
 {
+    DLog();
     if ([delegate respondsToSelector:@selector(engageAuthenticationDidFailWithError:forProvider:)])
         [delegate engageAuthenticationDidFailWithError:error forProvider:provider];
 
@@ -188,6 +196,7 @@ static JREngageWrapper *singleton = nil;
 
 - (void)authenticationDidNotComplete
 {
+    DLog();
     if ([delegate respondsToSelector:@selector(engageSigninDidNotComplete)])
         [delegate engageSigninDidNotComplete];
 
@@ -204,32 +213,31 @@ static JREngageWrapper *singleton = nil;
 
     if (!payloadDict)
         return [self authenticationCallToTokenUrl:tokenUrl
-                                 didFailWithError:[JRCaptureError invalidApiResponseError:payload]
+                                 didFailWithError:[JRCaptureError invalidApiResponseErrorWithString:payload]
                                       forProvider:provider];
 
     if (![[payloadDict objectForKey:@"stat"] isEqual:@"ok"])
     {
-        JRCaptureError *error = [JRCaptureError errorFromResult:payloadDict onProvider:provider mergeToken:mergeToken];
+        JRCaptureError *error = [JRCaptureError errorFromResult:payloadDict onProvider:provider
+                                                    engageToken:engageToken];
         [self authenticationCallToTokenUrl:tokenUrl didFailWithError:error forProvider:provider];
         return;
     }
 
     FinishSignInError error = [JRCaptureApidInterface finishSignInWithPayload:payloadDict forDelegate:delegate];
 
-    if (error == cJRInvalidResponse)
-        [self authenticationCallToTokenUrl:tokenUrl didFailWithError:[JRCaptureError invalidApiResponseError:payload]
+    if (error == cJRInvalidResponse || error == cJRInvalidCaptureUser)
+    {
+        [self authenticationCallToTokenUrl:tokenUrl didFailWithError:[JRCaptureError invalidApiResponseErrorWithString:payload]
                                forProvider:provider];
-
-    if (error == cJRInvalidCaptureUser)
-        [self authenticationCallToTokenUrl:tokenUrl didFailWithError:[JRCaptureError invalidApiResponseError:payload]
-                               forProvider:provider];
+    }
 
     [self engageLibraryTearDown];
 }
 
 - (void)authenticationDidSucceedForUser:(NSDictionary *)auth_info forProvider:(NSString *)provider
 {
-    self.mergeToken = [auth_info objectForKey:@"token"];
+    self.engageToken = [auth_info objectForKey:@"token"];
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 
     if ([delegate respondsToSelector:@selector(engageSigninDidSucceedForUser:forProvider:)])
@@ -252,7 +260,7 @@ static JREngageWrapper *singleton = nil;
     [delegate release];
 
     [nativeSigninViewController release];
-    [mergeToken release];
+    [engageToken release];
     [super dealloc];
 }
 @end

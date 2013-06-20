@@ -32,33 +32,52 @@
 
 /**
  * @internal
- * Intended for internal use. Please see JRCapture.h
  */
 @interface JRCaptureData : NSObject
 @property(nonatomic, retain) NSString *bpChannelUrl;
 @property(nonatomic, readonly, retain) NSString *captureBaseUrl;
+@property(nonatomic, readonly, retain) NSString *captureRedirectUri;
 @property(nonatomic, readonly, retain) NSString *clientId;
 @property(nonatomic, readonly, retain) NSString *accessToken;
-@property(nonatomic, readonly, retain) NSString *creationToken;
+@property(nonatomic, readonly, retain) NSString *refreshSecret;
 @property(nonatomic, readonly, retain) NSString *captureLocale;
-@property(nonatomic, readonly, retain) NSString *captureFormName;
+@property(nonatomic, readonly, retain) NSString *captureSignInFormName;
 @property(nonatomic, readonly, retain) NSString *captureFlowName;
-@property(nonatomic, readonly) JRConventionalSigninType captureTradSignInType;
+//@property(nonatomic, readonly) JRConventionalSigninType captureTradSignInType;
+@property(nonatomic, readonly, retain) NSString *captureTraditionalRegistrationFormName;
+@property(nonatomic, readonly, retain) NSString *captureSocialRegistrationFormName;
+@property(nonatomic, readonly, retain) NSString *captureFlowVersion;
+@property(nonatomic, readonly, retain) NSString *captureAppId;
+@property(nonatomic, readonly, retain) NSDictionary *captureFlow;
+@property(nonatomic) BOOL flowUsesTestingCdn;
 
-+ (void)setAccessToken:(NSString *)newAccessToken;
-+ (void)setCreationToken:(NSString *)newCreationToken;
++ (void)setAccessToken:(NSString *)token;
 
-+ (void)    setCaptureDomain:(NSString *)captureDomain captureClientId:(NSString *)clientId
-               captureLocale:(NSString *)captureLocale captureFormName:(NSString *)captureFormName
-             captureFlowName:(NSString *)captureFlowName
-captureTraditionalSignInType:(JRConventionalSigninType)tradSignInType;
++ (void)setCaptureRedirectUri:(NSString *)redirectUri;
 
-+ (NSString *)captureMobileEndpointUrlWithMergeToken:(NSString *)mergeToken;
++ (void)setCaptureDomain:(NSString *)captureDomain captureClientId:(NSString *)clientId
+           captureLocale:(NSString *)captureLocale captureSignInFormName:(NSString *)captureSignInFormName
+                       captureFlowName:(NSString *)captureFlowName
+         captureEnableThinRegistration:(BOOL)enableThinRegistration
+captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:(NSString *)captureSocialRegistrationFormName
+                    captureFlowVersion:(NSString *)captureFlowVersion captureAppId:(NSString *)captureAppId;
+
++ (NSString *)captureTokenUrlWithMergeToken:(NSString *)mergeToken;
 
 + (void)clearSignInState;
 
 + (JRCaptureData *)sharedCaptureData;
 
++ (NSString *)generateAndStoreRefreshSecret;
+
++ (NSMutableURLRequest *)requestWithPath:(NSString *)path;
+
+- (NSString *)downloadedFlowVersion;
+
 - (NSString *)redirectUri;
 
+- (void)loadFlow;
+
+- (NSMutableURLRequest *)urlForPath:(NSString *)path;
 @end

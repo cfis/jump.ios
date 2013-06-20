@@ -131,7 +131,7 @@ typedef enum
 
 /**
  * Indicates the type of the user record as an argument to your
- * JRCaptureSigninDelegate#captureAuthenticationDidSucceedForUser:status: delegate method.
+ * JRCaptureSignInDelegate#captureAuthenticationDidSucceedForUser:status: delegate method.
  *
  * There are three possible values for \c captureRecordStatus, indicating the creation state of the record.
  *
@@ -150,35 +150,17 @@ typedef enum
 typedef enum
 {
 /**
- * Indicates that the user had an existing Capture record and that record has been retrieved.
- * Your application should update its state to reflect the user being signed-in
- **/
- JRCaptureRecordNewlyCreated,          /* now it exists, and it is new */
-
-/**
  * Indicates that this is a new user and that a new Capture record has already been
  * automatically created. Your application may wish to collect additional new-user information and push that
  * information back to the Capture server
  **/
- JRCaptureRecordExists,                /* already created, not new */
+ JRCaptureRecordNewlyCreated,          /* now it exists, and it is new */
 
 /**
- * Indicates that this is a new user but that a record was not automatically created on Capture, either because there
- * was not enough information from the social sign-in provider to fill the required attributes, or because record
- * auto-creation was explicitly disabled.
- *
- * Record auto-creation can fail when your Capture schema requires an email address, but Twitter does not provide an
- * email address, so the record cannot be created on Capture when the user signs in with Twitter.)
- *
- *
- * The partially complete user record is passed back to your application, where it is your application’s responsibility
- * to collect required data and create the user record on Capture:
- *     - Your application should present a registration dialog to collect missing information
- *     - Your application should store this information in the JRCaptureUser instance passed to
- *       CaptureSigninDelegate#captureAuthenticationDidSucceedForUser:status:
- *     - Once the information is collected, your application needs to create the record on Capture
+ * Indicates that the user had an existing Capture record and that record has been retrieved.
+ * Your application should update its state to reflect the user being signed-in
  **/
- JRCaptureRecordRequiresCreation
+ JRCaptureRecordExists,                /* already created, not new */
 } JRCaptureRecordStatus;
 
 @class JRActivityObject;
@@ -190,7 +172,7 @@ typedef enum
  * This protocol will notify the delegate when authentications succeed or fail; it will provide the delegate
  * with the authenticated user's profile data as returned from the Engage and Capture servers.
  **/
-@protocol JRCaptureSigninDelegate <NSObject>
+@protocol JRCaptureSignInDelegate <NSObject>
 @optional
 /**
  * @name Configuration
@@ -239,7 +221,7 @@ typedef enum
  *
  * @param provider
  *   The name of the provider on which the user authenticated. For a list of possible strings,
- *   please see the \ref basicProviders "List of Providers"
+ *   please see the \ref authenticationProviders "List of Providers"
  *
  * @par Example:
  *   The structure of the auth_info dictionary (represented here in json) should look something like
@@ -315,13 +297,13 @@ typedef enum
  *
  * @param provider
  *   The name of the provider on which the user tried to authenticate. For a list of possible strings,
- *   please see the \ref basicProviders "List of Providers"
+ *   please see the \ref authenticationProviders "List of Providers"
  *
  * @note
  * This message is not sent if authentication was canceled. To be notified of a canceled authentication,
  * see engageSigninDidNotComplete().
  **/
-- (void)engageAuthenticationDidFailWithError:(NSError*)error forProvider:(NSString*)provider;
+- (void)engageAuthenticationDidFailWithError:(NSError*)error forProvider:(NSString *)provider;
 
 /**
  * Sent when the call to the Capture server has failed.
@@ -331,6 +313,7 @@ typedef enum
  *   for more information
  **/
 - (void)captureAuthenticationDidFailWithError:(NSError*)error;
+
 @end
 
 /**
@@ -378,24 +361,49 @@ typedef enum
  *   The name of the Capture sign-in flow your users will sign-in with. Optional. Pass nil to have Capture use the
  *   flow specified by the default_flow_name setting for your Capture app, specified in the Capture dashboard.
  *
- * @param captureFormName
+ * @param captureTraditionalSignInFormName
  *   The name of the sign-in form in the Capture flow your users will sign-in with. Required. Likely to be "signinForm"
  *
  * @param captureTraditionalSignInType
  *   The type of traditional sign-in your end-users will sign-in with.
  **/
-+ (void)      setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
-             captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
-             captureFlowName:(NSString *)captureFlowName
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+       captureFlowName:(NSString *)captureFlowName
+              captureFlowVersion:(NSString *)captureFlowVersion
+captureTraditionalSignInFormName:(NSString *)captureSignInFormName
+    captureTraditionalSignInType:(__unused JRConventionalSigninType)captureTraditionalSignInType
+                    captureAppId:(NSString *)captureAppId customIdentityProviders:(NSDictionary *)customProviders;
+
+/**
+ * @deprecated
+ */
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+       captureFlowName:(NSString *)captureFlowName
              captureFormName:(NSString *)captureFormName
 captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInType;
 
-+ (void)clearSignInState;
+/**
+ * @deprecated
+ */
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+             captureFlowName:(NSString *)captureFlowName captureFormName:(NSString *)captureFormName
+captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInType
+     customIdentityProviders:(NSDictionary *)customProviders;
 
 /**
  * Set the Capture access token for an authenticated user
  **/
 + (void)setAccessToken:(NSString *)newAccessToken __unused;
+
+/**
+ * Sets the "redirect URI" supplied Capture when registering and signing in.
+ *
+ * This parameter is used by Capture in the email-verification and password-reset emails sent by Capture.
+ */
++ (void)setRedirectUri:(NSString *)redirectUri __unused;
 /*@}*/
 
 /**
@@ -413,9 +421,9 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
 * pop up a modal dialog and take the user through the sign-in process.
 *
 * @param delegate
-*   The JRCaptureSigninDelegate object that wishes to receive messages regarding user authentication
+*   The JRCaptureSignInDelegate object that wishes to receive messages regarding user authentication
 **/
-+ (void)startEngageSigninDialogForDelegate:(id<JRCaptureSigninDelegate>)delegate __unused;
++ (void)startEngageSigninDialogForDelegate:(id<JRCaptureSignInDelegate>)delegate __unused;
 
 /**
  * Begin authentication for one specific provider. The library will
@@ -424,10 +432,10 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  *
  * @param provider
  *   The name of the provider on which the user will authenticate. For a list of possible strings,
- *   please see the \ref basicProviders "List of Providers"
+ *   please see the \ref authenticationProviders "List of Providers"
  **/
-+ (void)startEngageSigninDialogOnProvider:(NSString*)provider
-                              forDelegate:(id<JRCaptureSigninDelegate>)delegate __unused;
++ (void)startEngageSigninDialogOnProvider:(NSString *)provider
+                              forDelegate:(id<JRCaptureSignInDelegate>)delegate __unused;
 
 /**
  * Begin authentication. The Engage for iOS portion of the library will
@@ -439,7 +447,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  *   look and feel of the user interface and/or add a native login experience
  **/
 + (void)startEngageSigninDialogWithCustomInterfaceOverrides:(NSDictionary*)customInterfaceOverrides
-                                                forDelegate:(id<JRCaptureSigninDelegate>)delegate __unused;
+                                                forDelegate:(id<JRCaptureSignInDelegate>)delegate __unused;
 
 /**
  * Begin authentication for one specific provider. The library will
@@ -448,16 +456,16 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  *
  * @param provider
  *   The name of the provider on which the user will authenticate. For a list of possible strings,
- *   please see the \ref basicProviders "List of Providers"
+ *   please see the \ref authenticationProviders "List of Providers"
  *
  * @param customInterfaceOverrides
  *   A dictionary of objects and properties, indexed by the set of
  *   \link customInterface pre-defined custom interface keys\endlink, to be used by the library to customize the look
  *   and feel of the user interface and/or add a native login experience
  **/
-+ (void)startEngageSigninDialogOnProvider:(NSString*)provider
++ (void)startEngageSigninDialogOnProvider:(NSString *)provider
              withCustomInterfaceOverrides:(NSDictionary*)customInterfaceOverrides
-                              forDelegate:(id<JRCaptureSigninDelegate>)delegate __unused;
+                              forDelegate:(id<JRCaptureSignInDelegate>)delegate __unused;
 
 
 /**
@@ -467,7 +475,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  *
  * @param provider
  *   The name of the provider on which the user will authenticate. For a list of possible strings,
- *   please see the \ref basicProviders "List of Providers"
+ *   please see the \ref authenticationProviders "List of Providers"
  *
  * @param customInterfaceOverrides
  *   A dictionary of objects and properties, indexed by the set of
@@ -478,9 +486,9 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  *   The merge token, retrieved from the merge flow error instance.
  **/
 + (void)startEngageSigninDialogOnProvider:(NSString *)provider
-             withCustomInterfaceOverrides:(NSMutableDictionary *)customInterfaceOverrides
+             withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
                                mergeToken:(NSString *)mergeToken
-                              forDelegate:(id <JRCaptureSigninDelegate>)delegate;
+                              forDelegate:(id <JRCaptureSignInDelegate>)delegate;
 
 /**
  * Begin authentication, adding the option for your users to log directly into Capture through
@@ -488,7 +496,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  * a direct login form, above the list of social providers, that allows your users to login with a username/password
  * or email/password combination.
  *
- * @param conventionalSigninType
+ * @param conventionalSignInType
  *   A JRConventionalSigninType that tells the library to either prompt the user for their username/password
  *   combination or their email/password combination. This value must match what is configured for your Capture UI
  *   application. If you are unsure which one to use, try one, and if sign-in fails, try the other. If you pass in
@@ -499,8 +507,8 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  * JRConventionalSigninType of either JRConventionalSigninUsernamePassword or JRConventionalSigninEmailPassword.
  * Based on this argument, the dialog will prompt your user to either enter their username or email.
  **/
-+ (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSigninType
-                                          forDelegate:(id<JRCaptureSigninDelegate>)delegate __unused;
++ (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSignInType
+                                          forDelegate:(id<JRCaptureSignInDelegate>)delegate __unused;
 /**
  * Begin authentication, adding the option for your users to log directly into Capture through
  * your conventional signin mechanism. By using this method to initiate sign-in, the library automatically adds
@@ -523,8 +531,8 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  * Based on this argument, the dialog will prompt your user to either enter their username or email.
  **/
 + (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSignInType
-                          andCustomInterfaceOverrides:(NSDictionary*)customInterfaceOverrides
-                                          forDelegate:(id<JRCaptureSigninDelegate>)delegate;
+                          andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                          forDelegate:(id<JRCaptureSignInDelegate>)delegate;
 
 /**
  * Signs a user in via traditional (username/email and password) authentication on Capture.
@@ -541,7 +549,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
 + (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
                                withSigninType:(JRConventionalSigninType)conventionalSignInType
                                    mergeToken:(NSString *)mergeToken
-                                  forDelegate:(id <JRCaptureSigninDelegate>)delegate;
+                                  forDelegate:(id <JRCaptureSignInDelegate>)delegate;
 
 /**
  * Signs a user in via traditional (username/email and password) authentication on Capture.
@@ -555,7 +563,12 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
  */
 + (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
                                withSigninType:(JRConventionalSigninType)conventionalSignInType
-                                  forDelegate:(id <JRCaptureSigninDelegate>)delegate __unused;
+                                  forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused;
+
+/**
+ * Signs the currently-signed-in user, if any, out.
+ */
++ (void)clearSignInState;
 
 @end
 
@@ -577,7 +590,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
 </script>
 @endhtmlonly
 
-@anchor basicProviders
+@anchor authenticationProviders
 @htmlonly
 <!-- Redundant attributes to force scrolling to work across multiple browsers -->
 <iframe id="basic" src="https://rpxnow.com/docs/mobile_providers?list=basic&device=iphone" width="100%" height="100%"
@@ -587,7 +600,7 @@ captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInT
 </iframe></p>
 @endhtmlonly
 
-@anchor socialProviders
+@anchor sharingProviders
 @htmlonly
 <iframe id="social" src="https://rpxnow.com/docs/mobile_providers?list=social&device=iphone" width="100%" height="100%"
     style="border:none; overflow:hidden;" frameborder="0" scrolling="no">

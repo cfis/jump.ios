@@ -36,6 +36,7 @@
 #import "JRConventionalSignInViewController.h"
 #import "JREngageWrapper.h"
 #import "JRUserInterfaceMaestro.h"
+#import "JRCaptureData.h"
 
 @interface JREngageWrapper (JREngageWrapper_InternalMethods)
 - (void)authenticationDidReachTokenUrl:(NSString *)tokenUrl withResponse:(NSURLResponse *)response andPayload:(NSData *)tokenUrlPayload forProvider:(NSString *)provider;
@@ -238,7 +239,7 @@
                                                       nameOrEmail, signInTypeString,
                                                       password, @"password", nil];
 
-    [JRCaptureApidInterface signinCaptureUserWithCredentials:credentials
+    [JRCaptureApidInterface signInCaptureUserWithCredentials:credentials
                                                       ofType:signInTypeString
                                                  forDelegate:self
                                                  withContext:nil];
@@ -249,7 +250,7 @@
     [delegate showLoading];
 }
 
-- (void)signinCaptureUserDidSucceedWithResult:(NSString *)result context:(NSObject *)context
+- (void)signInCaptureUserDidSucceedWithResult:(NSString *)result context:(NSObject *)context
 {
     [delegate hideLoading];
 
@@ -259,12 +260,12 @@
     [delegate authenticationDidComplete];
 }
 
-- (void)signinCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context
+- (void)signInCaptureUserDidFailWithResult:(NSError *)error context:(NSObject *)context
 {
-    DLog(@"result: %@", [result description]);
+    DLog(@"error: %@", [error description]);
     NSString const *type = self.signInType == JRConventionalSigninEmailPassword ? @"Email" : @"Username";
     NSString *title = [NSString stringWithFormat:@"Incorrect %@ or Password", type];
-    NSString *const message = [result objectForKey:@"error"];
+    //NSString *const message = [result objectForKey:@"error"];
     UIAlertView *alertView = [[[UIAlertView alloc] initWithTitle:title
                                                          message:nil // MOB-73
                                                         delegate:nil
@@ -273,6 +274,8 @@
     [alertView show];
 
     [delegate hideLoading];
+    // XXX hack to skirt the side effects thrown off by the client's sign-in APIs:
+    [JREngage updateTokenUrl:[JRCaptureData captureTokenUrlWithMergeToken:nil]];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation

@@ -34,26 +34,17 @@
 
 #import "JRUserLandingController.h"
 #import "JREngage+CustomInterface.h"
-#import "JRSessionData.h"
-#import "JRInfoBar.h"
 #import "JREngageError.h"
 #import "JRUserInterfaceMaestro.h"
 #import "JRWebViewController.h"
+#import "debug_log.h"
 
-#ifdef DEBUG
-#define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-#else
-#define DLog(...)
-#endif
-
-#define ALog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
-
-#define frame_x(a) a.frame.origin.x
-#define frame_y(a) a.frame.origin.y
+//#define frame_x(a) a.frame.origin.x
+//#define frame_y(a) a.frame.origin.y
 #define frame_w(a) a.frame.size.width
 #define frame_h(a) a.frame.size.height
 
-#define frame_a(a) frame_x(a), frame_y(a), frame_w(a), frame_h(a)
+//#define frame_a(a) frame_x(a), frame_y(a), frame_w(a), frame_h(a)
 
 @interface JREngageError (JREngageError_setError)
 + (NSError*)setError:(NSString*)message withCode:(NSInteger)code;
@@ -94,11 +85,11 @@
 
     myTableView.backgroundColor = [UIColor clearColor];
 
- /* If there is a UIColor object set for the background color, use this */
+    /* If there is a UIColor object set for the background color, use this */
     if ([customInterface objectForKey:kJRAuthenticationBackgroundColor])
         myBackgroundView.backgroundColor = [customInterface objectForKey:kJRAuthenticationBackgroundColor];
 
- /* Weird hack necessary on the iPad, as the iPad table views have some background view that is always gray */
+    /* Weird hack necessary on the iPad, as the iPad table views have some background view that is always gray */
     if ([myTableView respondsToSelector:@selector(setBackgroundView:)])
         [myTableView setBackgroundView:nil];
 
@@ -163,7 +154,7 @@
         titleView.backgroundColor = [UIColor clearColor];
         titleView.font            = [UIFont boldSystemFontOfSize:20.0];
         titleView.shadowColor     = [UIColor colorWithWhite:0.0 alpha:0.5];
-        titleView.textAlignment   = UITextAlignmentCenter;
+        titleView.textAlignment   = JR_TEXT_ALIGN_CENTER;
         titleView.textColor       = [UIColor whiteColor];
     }
 
@@ -179,7 +170,7 @@
     DLog(@"");
     [super viewDidAppear:animated];
 
-    self.contentSizeForViewInPopover = CGSizeMake(320, 416);
+    self.contentSizeForViewInPopover = self.view.frame.size;
 
     UITableViewCell *cell = [self getTableCell];
     UITextField     *textField = [self getTextField:cell];
@@ -198,18 +189,6 @@
 {
     DLog(@"");
     [super viewWillDisappear:animated];
-}
-
-- (void)viewDidDisappear:(BOOL)animated
-{
-    DLog(@"");
-    [super viewDidDisappear:animated];
-}
-
-- (void)viewDidUnload
-{
-    DLog(@"");
-    [super viewDidUnload];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex { }
@@ -263,14 +242,13 @@ enum
 
     logo.autoresizingMask = UIViewAutoresizingFlexibleRightMargin |
                             UIViewAutoresizingFlexibleLeftMargin;
-//    logo.contentMode      = UIViewContentModeCenter;
 
     logo.tag = LOGO_TAG;
 
     return logo;
 }
 
-- (UILabel*)getWelcomeLabel:(UITableViewCell*)cell
+- (UILabel *)getWelcomeLabel:(UITableViewCell *)cell
 {
     if (cell)
         return (UILabel*)[cell.contentView viewWithTag:WELCOME_LABEL_TAG];
@@ -290,7 +268,7 @@ enum
     return welcomeLabel;
 }
 
-- (UITextField*)getTextField:(UITableViewCell*)cell
+- (UITextField *)getTextField:(UITableViewCell *)cell
 {
     if (cell)
         return (UITextField*)[cell.contentView viewWithTag:TEXT_FIELD_TAG];
@@ -321,7 +299,7 @@ enum
     return textField;
 }
 
-- (UIButton*)getSignInButton:(UITableViewCell*)cell
+- (UIButton *)getSignInButton:(UITableViewCell *)cell
 {
     if (cell)
         return (UIButton*)[cell.contentView viewWithTag:SIGN_IN_BUTTON_TAG];
@@ -349,7 +327,7 @@ enum
     return signInButton;
 }
 
-- (UIButton*)getBackToProvidersButton:(UITableViewCell*)cell
+- (UIButton *)getBackToProvidersButton:(UITableViewCell *)cell
 {
     if (cell)
         return (UIButton*)[cell.contentView viewWithTag:BACK_TO_PROVIDERS_BUTTON_TAG];
@@ -377,7 +355,7 @@ enum
     return backToProvidersButton;
 }
 
-- (UIButton*)getBigSignInButton:(UITableViewCell*)cell
+- (UIButton *)getBigSignInButton:(UITableViewCell *)cell
 {
     if (cell)
         return (UIButton*)[cell.contentView viewWithTag:BIG_SIGN_IN_BUTTON_TAG];
@@ -446,7 +424,8 @@ enum
     UIButton    *bigSignInButton = [self getBigSignInButton:cell];
     UILabel     *welcomeLabel    = [self getWelcomeLabel:cell];
 
- /* If the provider requires input, we need to enable the textField, and set the text/placeholder text to the appropriate string */
+    /* If the provider requires input, we need to enable the textField, and set the text/placeholder text to the
+    appropriate string */
     if (sessionData.currentProvider.requiresInput)
     {
         DLog(@"current provider requires input");
@@ -468,8 +447,10 @@ enum
         [welcomeLabel setHidden:YES];
         [bigSignInButton setHidden:NO];
     }
-    else /* If the provider doesn't require input, then we are here because this is the return experience screen and only for basic providers */
+    else
     {
+        /* If the provider doesn't require input, then we are here because this is the return experience screen and
+        only for basic providers */
         DLog(@"current provider does not require input");
 
         [textField setHidden:YES];
@@ -486,7 +467,7 @@ enum
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     BOOL b;
-    if (sessionData.canRotate)
+    if ([JRUserInterfaceMaestro sharedMaestro].canRotate)
         b = interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown;
     else
         b = interfaceOrientation == UIInterfaceOrientationPortrait;
@@ -496,7 +477,7 @@ enum
 
 #define TABLE_VIEW_FRAME_LANDSCAPE_SMALL    0,  0,  self.view.frame.size.width,  120
 #define TABLE_VIEW_FRAME_LANDSCAPE_BIG      0,  0,  self.view.frame.size.width,  268
-// TABLE_VIEW_FRAME_PORTRAIT seems OK on 4" iPhone despite screen specifc 416px spec
+// TABLE_VIEW_FRAME_PORTRAIT seems OK on 4" iPhone despite screen specific 416px spec
 #define TABLE_VIEW_FRAME_PORTRAIT           0,  0,  self.view.frame.size.width,  416
 
 - (void)shrinkTableViewLandscape
@@ -579,8 +560,8 @@ enum
         }
     }
 
-    [[self navigationController] pushViewController:[JRUserInterfaceMaestro sharedMaestro].myWebViewController
-                                           animated:YES];
+    JRWebViewController *webViewController = [JRUserInterfaceMaestro sharedMaestro].myWebViewController;
+    [[self navigationController] pushViewController:webViewController animated:YES];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
@@ -594,11 +575,12 @@ enum
 {
     DLog(@"");
 
- /* This should work, because this button will only be visible during the return experience of a basic provider */
-    sessionData.currentProvider.forceReauth = YES;
+    /* This should work, because this button will only be visible during the return experience of a basic provider */
+    //sessionData.currentProvider.forceReauth = YES;
+    [sessionData forgetAuthenticatedUserForProvider:sessionData.currentProvider.name];
 
     [sessionData setCurrentProvider:nil];
-    [sessionData setReturningBasicProviderToNil];
+    [sessionData clearReturningAuthenticationProvider];
 
     [[self navigationController] popViewControllerAnimated:YES];
 }

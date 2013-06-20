@@ -35,7 +35,7 @@
 #import <Foundation/Foundation.h>
 #import "JRConnectionManager.h"
 
-@protocol JRCaptureSigninDelegate;
+@protocol JRCaptureSignInDelegate;
 
 typedef enum
 {
@@ -49,31 +49,25 @@ typedef enum
  */
 @protocol JRCaptureInterfaceDelegate <NSObject>
 @optional
-- (void)createCaptureUserDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)createCaptureUserDidFailWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)signinCaptureUserDidSucceedWithResult:(NSString *)result context:(NSObject *)context;
-- (void)signinCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context;
+- (void)signInCaptureUserDidSucceedWithResult:(NSString *)result context:(NSObject *)context;
+- (void)signInCaptureUserDidFailWithResult:(NSError *)error context:(NSObject *)context;
 - (void)getCaptureUserDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)getCaptureUserDidFailWithResult:(NSObject *)result context:(NSObject *)context;
+- (void)getCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context;
 - (void)getCaptureObjectDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
 - (void)getCaptureObjectDidFailWithResult:(NSObject *)result context:(NSObject *)context;
 - (void)updateCaptureObjectDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)updateCaptureObjectDidFailWithResult:(NSObject *)result context:(NSObject *)context;
+- (void)updateCaptureObjectDidFailWithResult:(NSDictionary *)result context:(NSObject *)context;
 - (void)replaceCaptureObjectDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)replaceCaptureObjectDidFailWithResult:(NSObject *)result context:(NSObject *)context;
+- (void)replaceCaptureObjectDidFailWithResult:(NSDictionary *)result context:(NSObject *)context;
 - (void)replaceCaptureArrayDidSucceedWithResult:(NSObject *)result context:(NSObject *)context;
-- (void)replaceCaptureArrayDidFailWithResult:(NSObject *)result context:(NSObject *)context;
+- (void)replaceCaptureArrayDidFailWithResult:(NSDictionary *)result context:(NSObject *)context;
 @end
 
 /**
  * @internal
  */
-
-/**
- * @internal
- */
 @interface JRCaptureApidInterface : NSObject <JRConnectionManagerDelegate>
-+ (void)signinCaptureUserWithCredentials:(NSDictionary *)credentials
++ (void)signInCaptureUserWithCredentials:(NSDictionary *)credentials
                                   ofType:(NSString *)signInType
                              forDelegate:(id)delegate
                              withContext:(NSObject *)context;
@@ -105,5 +99,11 @@ typedef enum
                  forDelegate:(id <JRCaptureInterfaceDelegate>)delegate
                  withContext:(NSObject *)context;
 
-+ (FinishSignInError)finishSignInWithPayload:(NSDictionary *)payloadDict forDelegate:(id<JRCaptureSigninDelegate>)delegate;
++ (FinishSignInError)finishSignInWithPayload:(NSDictionary *)payloadDict
+                                 forDelegate:(id <JRCaptureSignInDelegate>)delegate;
+
++ (void)maybeDispatch:(SEL)pSelector forDelegate:(id <JRCaptureSignInDelegate>)delegate withArg:(id)arg;
+
++ (void)jsonRequestToUrl:(NSString *)url params:(NSDictionary *)params
+                              completionHandler:(void (^)(id, NSError *))handler;
 @end

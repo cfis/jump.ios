@@ -32,11 +32,17 @@
 #import "JRCapture.h"
 #import "BackplaneUtils.h"
 #import "debug_log.h"
+#import "JRSessionData.h"
+#import "JRCaptureData.h"
+#import "JREngage.h"
+
+@interface JRSessionData (Internal)
++ (void)setServerUrl:(NSString *)serverUrl_;
+@end
 
 AppDelegate *appDelegate = nil;
 
 @implementation AppDelegate
-
 @synthesize window;
 @synthesize prefs;
 
@@ -45,9 +51,12 @@ AppDelegate *appDelegate = nil;
 @synthesize captureClientId;
 @synthesize captureDomain;
 @synthesize captureLocale;
-@synthesize captureFormName;
+@synthesize captureTraditionalSignInFormName;
 @synthesize captureFlowName;
 @synthesize engageAppId;
+@synthesize captureFlowVersion;
+@synthesize captureAppId;
+@synthesize customProviders;
 
 // Backplane / LiveFyre stuff:
 @synthesize bpChannelUrl;
@@ -59,19 +68,22 @@ AppDelegate *appDelegate = nil;
 
 // Demo state machine stuff:
 @synthesize currentProvider;
-@synthesize isNew;
 @synthesize isNotYetCreated;
-@synthesize engageSignInWasCanceled;
+//@synthesize engageSignInWasCanceled;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     appDelegate = self;
 
-    [self loadConfigFromPlist];
+    [self loadDemoConfigFromPlist];
+
     [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain
               captureClientId:captureClientId captureLocale:captureLocale
-              captureFlowName:captureFlowName captureFormName:captureFormName
- captureTraditionalSignInType:JRConventionalSigninEmailPassword];
+                 captureFlowName:captureFlowName captureFlowVersion:captureFlowVersion
+captureTraditionalSignInFormName:captureTraditionalSignInFormName
+    captureTraditionalSignInType:JRConventionalSigninEmailPassword
+                    captureAppId:captureAppId
+         customIdentityProviders:customProviders];
 
     [BackplaneUtils asyncFetchNewBackplaneChannelWithBus:bpBusUrlString
                                               completion:^(NSString *newChannel, NSError *error)
@@ -88,7 +100,7 @@ AppDelegate *appDelegate = nil;
 
     self.prefs = [NSUserDefaults standardUserDefaults];
 
-    self.currentProvider  = [self.prefs objectForKey:cJRCurrentProvider];
+    self.currentProvider = [self.prefs objectForKey:cJRCurrentProvider];
 
     NSData *archivedCaptureUser = [self.prefs objectForKey:cJRCaptureUser];
     if (archivedCaptureUser)
@@ -131,11 +143,10 @@ AppDelegate *appDelegate = nil;
 
 }
 
-- (void)loadConfigFromPlist
+- (void)loadDemoConfigFromPlist
 {
     // See assets folder in Resources project group for janrain-config-default.plist
     // Copy to janrain-config.plist and change it to your details
-
     NSString *plistPath = [[NSBundle mainBundle] pathForResource:@"assets/janrain-config" ofType:@"plist"];
     if (!plistPath)
     {
@@ -143,19 +154,49 @@ AppDelegate *appDelegate = nil;
     }
     NSDictionary *cfgPlist = [NSDictionary dictionaryWithContentsOfFile:plistPath];
     NSString *configKeyName = [cfgPlist objectForKey:@"default-config"];
-    NSDictionary *cfg = [cfgPlist objectForKey:configKeyName];
+    [self parseConfigNamed:configKeyName fromConfigPlist:cfgPlist];
+}
 
-    self.captureClientId = [cfg objectForKey:@"captureClientId"];
-    self.captureDomain = [cfg objectForKey:@"captureDomain"];
-    self.captureLocale = [cfg objectForKey:@"captureLocale"];
-    self.captureFormName = [cfg objectForKey:@"captureFormName"];
-    self.captureFlowName = [cfg objectForKey:@"captureFlowName"];
-    self.engageAppId = [cfg objectForKey:@"engageAppId"];
-    self.bpBusUrlString = [cfg objectForKey:@"bpBusUrlString"];
-    self.bpChannelUrl = [cfg objectForKey:@"bpChannelUrl"];
-    self.liveFyreNetwork = [cfg objectForKey:@"liveFyreNetwork"];
-    self.liveFyreSiteId = [cfg objectForKey:@"liveFyreSiteId"];
-    self.liveFyreArticleId = [cfg objectForKey:@"liveFyreArticleId"];
+- (void)parseConfigNamed:(NSString *)cfgKeyName fromConfigPlist:(NSDictionary *)cfgPlist
+{
+    NSDictionary *cfg = [cfgPlist objectForKey:cfgKeyName];
+
+    NSString *parentConfig = [cfg objectForKey:@"parentConfig"];
+    if (parentConfig) [self parseConfigNamed:parentConfig fromConfigPlist:cfgPlist];
+
+    if ([cfg objectForKey:@"captureClientId"])
+        self.captureClientId = [cfg objectForKey:@"captureClientId"];
+    if ([cfg objectForKey:@"captureDomain"])
+        self.captureDomain = [cfg objectForKey:@"captureDomain"];
+    if ([cfg objectForKey:@"captureLocale"])
+        self.captureLocale = [cfg objectForKey:@"captureLocale"];
+    if ([cfg objectForKey:@"captureTraditionalSignInFormName"])
+        self.captureTraditionalSignInFormName = [cfg objectForKey:@"captureTraditionalSignInFormName"];
+    if ([cfg objectForKey:@"captureFlowName"])
+        self.captureFlowName = [cfg objectForKey:@"captureFlowName"];
+    if ([cfg objectForKey:@"captureFlowVersion"])
+        self.captureFlowVersion = [cfg objectForKey:@"captureFlowVersion"];
+    if ([cfg objectForKey:@"captureAppId"])
+        self.captureAppId = [cfg objectForKey:@"captureAppId"];
+    if ([cfg objectForKey:@"engageAppId"])
+        self.engageAppId = [cfg objectForKey:@"engageAppId"];
+    if ([cfg objectForKey:@"bpBusUrlString"])
+        self.bpBusUrlString = [cfg objectForKey:@"bpBusUrlString"];
+    if ([cfg objectForKey:@"bpChannelUrl"])
+        self.bpChannelUrl = [cfg objectForKey:@"bpChannelUrl"];
+    if ([cfg objectForKey:@"liveFyreNetwork"])
+        self.liveFyreNetwork = [cfg objectForKey:@"liveFyreNetwork"];
+    if ([cfg objectForKey:@"liveFyreSiteId"])
+        self.liveFyreSiteId = [cfg objectForKey:@"liveFyreSiteId"];
+    if ([cfg objectForKey:@"liveFyreArticleId"])
+        self.liveFyreArticleId = [cfg objectForKey:@"liveFyreArticleId"];
+    if ([cfg objectForKey:@"rpxDomain"])
+        [JRSessionData setServerUrl:[NSString stringWithFormat:@"https://%@", [cfg objectForKey:@"rpxDomain"]]];
+    if ([cfg objectForKey:@"flowUsesTestingCdn"])
+    {
+        BOOL useTestingCdn = [[cfg objectForKey:@"flowUsesTestingCdn"] boolValue];
+        [JRCaptureData sharedCaptureData].flowUsesTestingCdn = useTestingCdn;
+    }
 }
 
 - (void)saveCaptureUser

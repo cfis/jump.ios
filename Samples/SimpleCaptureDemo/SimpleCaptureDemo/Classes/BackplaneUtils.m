@@ -70,7 +70,7 @@
 + (void)fireErrorOnCompletion:(void (^)(NSString *, NSError *))completion r:(NSURLResponse *)r d:(NSData *)d
                             e:(NSError *)e code:(NSInteger)code errorDesc:(NSString *)desc
 {
-    ALog(@"Err fetching new BP channel: %@, code: %i", e, code);
+    ALog(@"%@: %@, code: %i", desc, e, code);
     NSMutableDictionary *errDict = [NSMutableDictionary dictionary];
     if (r) [errDict setObject:r forKey:@"url_response"];
     if (d) [errDict setObject:d forKey:@"url_data"];
@@ -85,7 +85,7 @@
                                             network:(NSString *)liveFyreNetwork
                                              siteId:(NSString *)liveFyreSiteId
                                    backplaneChannel:(NSString *)bpChannelUrl
-                                         completion:(void(^)(NSString *token, NSError *error))completion __unused
+                                         completion:(void(^)(NSString *, NSError *))completion __unused
 {
     if (!liveFyreArticleId || !liveFyreNetwork || !liveFyreSiteId) {
         completion(nil, [NSError errorWithDomain:@"BackplaneUtils" code:0
