@@ -87,8 +87,13 @@
 		8B991AA416AE7CAE0031E60B /* JREngageWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A5E16AE7CAE0031E60B /* JREngageWrapper.m */; };
 		8B991AA516AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B991A5F16AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h */; };
 		8B991AA616AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B991A6016AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m */; };
-		8BE4BD471732527E00CF83C0 /* NSDictionary+QueryParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */; };
-		8BE4BD481732527E00CF83C0 /* NSDictionary+QueryParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */; };
+		8BBB832B1772E01F00896EAA /* JRBase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BBB83291772E01F00896EAA /* JRBase64.h */; };
+		8BBB832C1772E01F00896EAA /* JRBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB832A1772E01F00896EAA /* JRBase64.m */; };
+		8BBB83321772E02F00896EAA /* NSDictionary+JRQueryParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BBB832D1772E02F00896EAA /* NSDictionary+JRQueryParams.h */; };
+		8BBB83331772E02F00896EAA /* NSDictionary+JRQueryParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB832E1772E02F00896EAA /* NSDictionary+JRQueryParams.m */; };
+		8BBB83341772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BBB832F1772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h */; };
+		8BBB83351772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB83301772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m */; };
+		8BBB83361772E02F00896EAA /* NSMutableURLRequest+JRRequestUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BBB83311772E02F00896EAA /* NSMutableURLRequest+JRRequestUtils.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -441,8 +446,13 @@
 		8B991A5E16AE7CAE0031E60B /* JREngageWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JREngageWrapper.m; sourceTree = "<group>"; };
 		8B991A5F16AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "JRNSDate+ISO8601_CaptureDateTimeString.h"; sourceTree = "<group>"; };
 		8B991A6016AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "JRNSDate+ISO8601_CaptureDateTimeString.m"; sourceTree = "<group>"; };
-		8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+QueryParams.h"; sourceTree = "<group>"; };
-		8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+QueryParams.m"; sourceTree = "<group>"; };
+		8BBB83291772E01F00896EAA /* JRBase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRBase64.h; sourceTree = "<group>"; };
+		8BBB832A1772E01F00896EAA /* JRBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRBase64.m; sourceTree = "<group>"; };
+		8BBB832D1772E02F00896EAA /* NSDictionary+JRQueryParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+JRQueryParams.h"; sourceTree = "<group>"; };
+		8BBB832E1772E02F00896EAA /* NSDictionary+JRQueryParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+JRQueryParams.m"; sourceTree = "<group>"; };
+		8BBB832F1772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+JRDictionaryUtils.h"; sourceTree = "<group>"; };
+		8BBB83301772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+JRDictionaryUtils.m"; sourceTree = "<group>"; };
+		8BBB83311772E02F00896EAA /* NSMutableURLRequest+JRRequestUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableURLRequest+JRRequestUtils.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -838,6 +848,7 @@
 		8B82FF9616AE053F00A2540C /* Janrain */ = {
 			isa = PBXGroup;
 			children = (
+				8BBB83281772E01F00896EAA /* Base64 */,
 				8B82FF9716AE053F00A2540C /* JRCapture */,
 				8B82FFBD16AE053F00A2540C /* JRConnectionManager */,
 				8B82FFC016AE053F00A2540C /* JREngage */,
@@ -1004,8 +1015,11 @@
 		8B991A2116AE7CAE0031E60B /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				8BE4BD451732527E00CF83C0 /* NSDictionary+QueryParams.h */,
-				8BE4BD461732527E00CF83C0 /* NSDictionary+QueryParams.m */,
+				8BBB832D1772E02F00896EAA /* NSDictionary+JRQueryParams.h */,
+				8BBB832E1772E02F00896EAA /* NSDictionary+JRQueryParams.m */,
+				8BBB832F1772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h */,
+				8BBB83301772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m */,
+				8BBB83311772E02F00896EAA /* NSMutableURLRequest+JRRequestUtils.h */,
 				8B991A2216AE7CAE0031E60B /* CaptureUserModel */,
 				8B991A4816AE7CAE0031E60B /* debug_log.h */,
 				8B991A4916AE7CAE0031E60B /* JRCapture.h */,
@@ -1083,6 +1097,15 @@
 			path = Generated;
 			sourceTree = "<group>";
 		};
+		8BBB83281772E01F00896EAA /* Base64 */ = {
+			isa = PBXGroup;
+			children = (
+				8BBB83291772E01F00896EAA /* JRBase64.h */,
+				8BBB832A1772E01F00896EAA /* JRBase64.m */,
+			);
+			path = Base64;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -1123,7 +1146,10 @@
 				8B991AA116AE7CAE0031E60B /* JRConventionalSigninViewController.h in Headers */,
 				8B991AA316AE7CAE0031E60B /* JREngageWrapper.h in Headers */,
 				8B991AA516AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h in Headers */,
-				8BE4BD471732527E00CF83C0 /* NSDictionary+QueryParams.h in Headers */,
+				8BBB832B1772E01F00896EAA /* JRBase64.h in Headers */,
+				8BBB83321772E02F00896EAA /* NSDictionary+JRQueryParams.h in Headers */,
+				8BBB83341772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h in Headers */,
+				8BBB83361772E02F00896EAA /* NSMutableURLRequest+JRRequestUtils.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1227,7 +1253,9 @@
 				8B991AA216AE7CAE0031E60B /* JRConventionalSigninViewController.m in Sources */,
 				8B991AA416AE7CAE0031E60B /* JREngageWrapper.m in Sources */,
 				8B991AA616AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.m in Sources */,
-				8BE4BD481732527E00CF83C0 /* NSDictionary+QueryParams.m in Sources */,
+				8BBB832C1772E01F00896EAA /* JRBase64.m in Sources */,
+				8BBB83331772E02F00896EAA /* NSDictionary+JRQueryParams.m in Sources */,
+				8BBB83351772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
