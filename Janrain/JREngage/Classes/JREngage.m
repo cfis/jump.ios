@@ -36,10 +36,7 @@
 #import "JRSessionData.h"
 #import "JRUserInterfaceMaestro.h"
 #import "JREngageError.h"
-
-@interface JREngageError (JREngageError_setError)
-+ (NSError *)setError:(NSString *)message withCode:(NSInteger)code;
-@end
+#import "JRNativeAuth.h"
 
 @interface JREngage () <JRSessionDelegate>
 /** \internal Class that handles customizations to the library's UI */
@@ -160,8 +157,8 @@ static JREngage* singleton = nil;
     }
 }
 
-- (void)showAuthenticationDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                          orAuthenticatingOnJustThisProvider:(NSString *)provider
+- (void)showAuthenticationDialogForProvider:(NSString *)provider
+                            customInterface:(NSDictionary *)customInterfaceOverrides
 {
     ALog (@"");
 
@@ -192,11 +189,12 @@ static JREngage* singleton = nil;
         }
     }
 
-    if (sessionData.dialogIsShowing)
+    if (sessionData.authenticationFlowIsInFlight)
     {
         [self engageDidFailWithError:
-              [JREngageError setError:@"The dialog failed to show because there is already a JREngage dialog loaded."
-                             withCode:JRDialogShowingError]];
+                      [JREngageError errorWithMessage:@"The dialog failed to show because there is already a JREngage "
+                              "dialog loaded."
+                                              andCode:JRDialogShowingError]];
         return;
     }
 
@@ -204,14 +202,34 @@ static JREngage* singleton = nil;
     {
         NSString *message =
                 @"You tried to authenticate on a specific provider, but this provider has not yet been configured.";
-        [self engageDidFailWithError:[JREngageError setError:message withCode:JRProviderNotConfiguredError]];
+        [self engageDidFailWithError:[JREngageError errorWithMessage:message andCode:JRProviderNotConfiguredError]];
         return;
     }
 
-    if (provider)
-        interfaceMaestro.directProvider = provider;
+    if ([JRNativeAuth canHandleProvider:provider])
+    {
+        [self startNativeAuthWithCustomInterface:customInterfaceOverrides provider:provider];
+    }
+    else
+    {
+        [interfaceMaestro startWebAuthWithCustomInterface:customInterfaceOverrides provider:provider];
+    }
+}
 
-    [interfaceMaestro showAuthenticationDialogWithCustomInterface:customInterfaceOverrides];
+- (void)startNativeAuthWithCustomInterface:(NSDictionary *)customInterfaceOverrides provider:(NSString *)provider
+{
+    [JRNativeAuth startAuthOnProvider:provider completion:^(NSError *error)
+    {
+        if (!error) return;
+        if ([error.domain isEqualToString:JREngageErrorDomain] && error.code == JRAuthenticationCanceledError)
+        {
+            [self authenticationDidCancel];
+        }
+        else
+        {
+            [interfaceMaestro startWebAuthWithCustomInterface:customInterfaceOverrides provider:provider];
+        }
+    }];
 }
 
 //- (void)showAuthenticationDialogForProvider:(NSString *)provider
@@ -224,8 +242,8 @@ static JREngage* singleton = nil;
 + (void)showAuthenticationDialogForProvider:(NSString *)provider
                withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides __unused
 {
-    [[JREngage singletonInstance] showAuthenticationDialogWithCustomInterfaceOverrides:customInterfaceOverrides
-                            orAuthenticatingOnJustThisProvider:provider];
+    [[JREngage singletonInstance] showAuthenticationDialogForProvider:provider
+                                                      customInterface:customInterfaceOverrides];
 }
 
 //- (void)showAuthenticationDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
@@ -236,8 +254,8 @@ static JREngage* singleton = nil;
 
 + (void)showAuthenticationDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides __unused
 {
-    [[JREngage singletonInstance] showAuthenticationDialogWithCustomInterfaceOverrides:customInterfaceOverrides 
-                            orAuthenticatingOnJustThisProvider:nil];
+    [[JREngage singletonInstance] showAuthenticationDialogForProvider:nil
+                                                      customInterface:customInterfaceOverrides];
 }
 
 //- (void)showAuthenticationDialogForProvider:(NSString *)provider
@@ -248,14 +266,13 @@ static JREngage* singleton = nil;
 
 + (void)showAuthenticationDialogForProvider:(NSString *)provider
 {
-    [[JREngage singletonInstance] showAuthenticationDialogWithCustomInterfaceOverrides:nil
-                            orAuthenticatingOnJustThisProvider:provider];
+    [[JREngage singletonInstance] showAuthenticationDialogForProvider:provider
+                                                      customInterface:nil ];
 }
 
 - (void)showAuthenticationDialog
 {
-    [self showAuthenticationDialogWithCustomInterfaceOverrides:nil
-                            orAuthenticatingOnJustThisProvider:nil];
+    [self showAuthenticationDialogForProvider:nil customInterface:nil ];
 }
 
 + (void)showAuthenticationDialog __unused
@@ -268,17 +285,17 @@ static JREngage* singleton = nil;
 {
     ALog (@"");
 
- /* If there was error configuring the library, sessionData.error will not be null. */
+    /* If there was error configuring the library, sessionData.error will not be null. */
     if (sessionData.error)
     {
 
     /* Since configuration should happen long before the user attempts to use the library and because the user may not
-        attempt to use the library at all, we shouldn’t notify the calling application of the error until the library
+        attempt to use the library at all, we shouldn't notify the calling application of the error until the library
         is actually needed.  Additionally, since many configuration issues could be temporary (e.g., network issues),
         a subsequent attempt to reconfigure the library could end successfully.  The calling application could alert the
         user of the issue (with a pop-up dialog, for example) right when the user wants to use it (and not before).
-        This gives the calling application an ad hoc way to reconfigure the library, and doesn’t waste the limited
-        resources by trying to reconfigure itself if it doesn’t know if it’s actually needed. */
+        This gives the calling application an ad hoc way to reconfigure the library, and doesn't waste the limited
+        resources by trying to reconfigure itself if it doesn't know if it’s actually needed. */
 
         if (sessionData.error.code / 100 == ConfigurationError)
         {
@@ -294,19 +311,20 @@ static JREngage* singleton = nil;
         }
     }
 
-    if (sessionData.dialogIsShowing)
+    if (sessionData.authenticationFlowIsInFlight)
     {
         [self engageDidFailWithError:
-              [JREngageError setError:@"The dialog failed to show because there is already a JREngage dialog loaded."
-                             withCode:JRDialogShowingError]];
+                      [JREngageError errorWithMessage:@"The dialog failed to show because there is already a JREngage "
+                              "dialog loaded."
+                                              andCode:JRDialogShowingError]];
         return;
     }
 
     if (!activity)
     {
         [self engageDidFailWithError:
-              [JREngageError setError:@"Activity object can't be nil."
-                             withCode:JRPublishErrorActivityNil]];
+                      [JREngageError errorWithMessage:@"Activity object can't be nil."
+                                              andCode:JRPublishErrorActivityNil]];
         return;
     }
 

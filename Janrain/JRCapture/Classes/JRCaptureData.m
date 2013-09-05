@@ -29,7 +29,6 @@
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #import "debug_log.h"
-
 #import "JRCaptureData.h"
 #import "SFHFKeychainUtils.h"
 #import "NSDictionary+JRQueryParams.h"
@@ -80,14 +79,15 @@ static NSString *const FLOW_KEY = @"JR_capture_flow";
 @property(nonatomic, retain) NSString *captureFlowName;
 @property(nonatomic, retain) NSString *captureFlowVersion;
 @property(nonatomic, retain) NSString *captureLocale;
-@property(nonatomic, retain) NSString *captureSignInFormName;
+@property(nonatomic, retain) NSString *captureTraditionalSignInFormName;
 @property(nonatomic, retain) NSString *captureTraditionalRegistrationFormName;
 @property(nonatomic, retain) NSString *captureSocialRegistrationFormName;
 
-//@property(nonatomic) JRConventionalSigninType captureTradSignInType;
+//@property(nonatomic) JRTraditionalSignInType captureTradSignInType;
 @property(nonatomic) BOOL captureEnableThinRegistration;
 
 @property(nonatomic, retain) NSDictionary *captureFlow;
+@property(nonatomic) BOOL initialized;
 @end
 
 @implementation JRCaptureData
@@ -99,7 +99,7 @@ static JRCaptureData *singleton = nil;
 @synthesize refreshSecret;
 @synthesize bpChannelUrl;
 @synthesize captureLocale;
-@synthesize captureSignInFormName;
+@synthesize captureTraditionalSignInFormName;
 //@synthesize captureTradSignInType;
 @synthesize captureFlowName;
 @synthesize captureTraditionalRegistrationFormName;
@@ -166,17 +166,6 @@ static JRCaptureData *singleton = nil;
 
 + (NSString *)captureTokenUrlWithMergeToken:(NSString *)mergeToken
 {
-    /**
-    * client_id
-    * locale
-    * response_type
-    * redirect_uri
-    * token
-    * attributeUpdates
-    * thin_registration
-    * flow_name
-    */
-
     JRCaptureData *captureData = [JRCaptureData sharedCaptureData];
     NSString *redirectUri = [singleton redirectUri];
     NSString *thinReg = [JRCaptureData sharedCaptureData].captureEnableThinRegistration ? @"true" : @"false";
@@ -190,7 +179,7 @@ static JRCaptureData *singleton = nil;
                     @"refresh_secret" : [self generateAndStoreRefreshSecret],
             }];
 
-    if (captureData.captureFlowName) [urlArgs setObject:captureData.captureFlowName forKey:@"flow_name"];
+    if (captureData.captureFlowName) [urlArgs setObject:captureData.captureFlowName forKey:@"flow"];
     if ([captureData downloadedFlowVersion])
         [urlArgs setObject:[captureData downloadedFlowVersion] forKey:@"flow_version"];
     if (captureData.bpChannelUrl) [urlArgs setObject:captureData.bpChannelUrl forKey:@"bp_channel"];
@@ -239,7 +228,8 @@ static JRCaptureData *singleton = nil;
 }
 
 + (void)setCaptureDomain:(NSString *)captureDomain captureClientId:(NSString *)clientId
-           captureLocale:(NSString *)captureLocale captureSignInFormName:(NSString *)captureSignInFormName
+                   captureLocale:(NSString *)captureLocale
+captureTraditionalSignInFormName:(NSString *)captureTraditionalSignInFormName
                        captureFlowName:(NSString *)captureFlowName
          captureEnableThinRegistration:(BOOL)enableThinRegistration
 captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
@@ -247,11 +237,16 @@ captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistratio
                     captureFlowVersion:(NSString *)captureFlowVersion captureAppId:(NSString *)captureAppId
 {
     JRCaptureData *captureDataInstance = [JRCaptureData sharedCaptureData];
-
+    if (captureDataInstance.initialized)
+    {
+        [NSException raiseJRDebugException:@"JRCaptureDuplicateInitializationException" format:@"Repeated "
+                "initialization of JRCapture is unsafe"];
+    }
+    captureDataInstance.initialized = YES;
     captureDataInstance.captureBaseUrl = [captureDomain urlStringFromBaseDomain];
     captureDataInstance.clientId = clientId;
     captureDataInstance.captureLocale = captureLocale;
-    captureDataInstance.captureSignInFormName = captureSignInFormName;
+    captureDataInstance.captureTraditionalSignInFormName = captureTraditionalSignInFormName;
     captureDataInstance.captureFlowName = captureFlowName;
     captureDataInstance.captureEnableThinRegistration = enableThinRegistration;
     //captureDataInstance.captureTradSignInType = tradSignInType;
@@ -346,7 +341,7 @@ captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistratio
 
 + (void)storeTokenInKeychain:(NSString *)token name:(NSString *)name
 {
-    NSError  *error = nil;
+    NSError *error = nil;
 
     [SFHFKeychainUtils storeUsername:cJRCaptureKeychainUserName andPassword:token
                       forServiceName:[JRCaptureData serviceNameForTokenName:name]
@@ -402,7 +397,7 @@ captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistratio
     [captureBaseUrl release];
     [captureFlowName release];
     [captureLocale release];
-    [captureSignInFormName release];
+    [captureTraditionalSignInFormName release];
     [bpChannelUrl release];
     [captureTraditionalRegistrationFormName release];
     [captureFlowVersion release];
@@ -427,12 +422,8 @@ captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistratio
 
 + (NSMutableURLRequest *)requestWithPath:(NSString *)path
 {
-    return [[JRCaptureData sharedCaptureData] urlForPath:path];
-}
-
-- (NSMutableURLRequest *)urlForPath:(NSString *)path
-{
-    NSString *urlString = [[self captureBaseUrl] stringByAppendingString:path];
+    JRCaptureData *data = [JRCaptureData sharedCaptureData];
+    NSString *urlString = [[data captureBaseUrl] stringByAppendingString:path];
     return [NSMutableURLRequest requestWithURL:[NSURL URLWithString:urlString]];
 }
 

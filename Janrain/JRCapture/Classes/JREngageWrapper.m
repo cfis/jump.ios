@@ -29,25 +29,33 @@
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #import "debug_log.h"
+#import "JREngage.h"
 #import "JREngageWrapper.h"
 #import "JRCaptureData.h"
 #import "JREngage+CustomInterface.h"
-#import "JSONKit.h"
+#import "JRCaptureError.h"
+#import "JRTraditionalSigninViewController.h"
+#import "JRCapture.h"
+#import "JRJsonUtils.h"
 
-typedef enum
-{
+typedef enum {
     JREngageDialogStateAuthentication,
 } JREngageDialogState;
 
+@interface JRCapture (Internal)
++ (void)signInHandler:(id)json error:(NSError *)error delegate:(id <JRCaptureDelegate>)delegate;
+@end
+
 @interface JREngageWrapper ()
 @property(retain) NSString *engageToken;
-@property(retain) JRConventionalSignInViewController *nativeSigninViewController;
-@property(retain) id <JRCaptureSignInDelegate> delegate;
+@property(retain) JRTraditionalSignInViewController *nativeSignInViewController;
+@property(retain) id <JRCaptureDelegate> delegate;
 @property JREngageDialogState dialogState;
+@property bool didTearDownViewControllers;
 @end
 
 @implementation JREngageWrapper
-@synthesize nativeSigninViewController;
+@synthesize nativeSignInViewController;
 @synthesize delegate;
 @synthesize dialogState;
 @synthesize engageToken;
@@ -56,7 +64,13 @@ static JREngageWrapper *singleton = nil;
 
 - (JREngageWrapper *)init
 {
-    if ((self = [super init])) { }
+    if ((self = [super init])) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tearingDownViewControllers:)
+                                                     name:@"JRTearingDownViewControllers" object:nil];
+
+        self.didTearDownViewControllers = NO;
+
+    }
 
     return self;
 }
@@ -103,9 +117,9 @@ static JREngageWrapper *singleton = nil;
     JREngage.customProviders = customProviders;
 }
 
-+ (void)startAuthenticationDialogWithConventionalSignIn:(JRConventionalSigninType)nativeSignInType
-                            andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                            forDelegate:(id <JRCaptureSignInDelegate>)delegate
++ (void)startAuthenticationDialogWithTraditionalSignIn:(JRTraditionalSignInType)nativeSignInType
+                           andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                           forDelegate:(id <JRCaptureDelegate>)delegate
 {
     [JREngage updateTokenUrl:[JRCaptureData captureTokenUrlWithMergeToken:nil]];
 
@@ -116,7 +130,7 @@ static JREngageWrapper *singleton = nil;
     NSMutableDictionary *expandedCustomInterfaceOverrides =
             [NSMutableDictionary dictionaryWithDictionary:customInterfaceOverrides];
 
-    if (nativeSignInType != JRConventionalSigninNone)
+    if (nativeSignInType != JRTraditionalSignInNone)
     {
         [self configureTradSignIn:nativeSignInType expandedCustomInterfaceOverrides:expandedCustomInterfaceOverrides];
     }
@@ -124,13 +138,13 @@ static JREngageWrapper *singleton = nil;
     [JREngage showAuthenticationDialogWithCustomInterfaceOverrides:expandedCustomInterfaceOverrides];
 }
 
-+ (void)     configureTradSignIn:(JRConventionalSigninType)nativeSigninType
++ (void)     configureTradSignIn:(JRTraditionalSignInType)nativeSignInType
 expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceOverrides
 {
     NSString *nativeSignInTitleString =
-            ([expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] ?
-                    [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleString] :
-                    (nativeSigninType == JRConventionalSigninEmailPassword ?
+            ([expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleString] ?
+                    [expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleString] :
+                    (nativeSignInType == JRTraditionalSignInEmailPassword ?
                             @"Sign In With Your Email and Password" :
                             @"Sign In With Your Username and Password"));
 
@@ -138,26 +152,26 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
         [expandedCustomInterfaceOverrides setObject:@"Sign In With a Social Provider"
                                              forKey:kJRProviderTableSectionHeaderTitleString];
 
-    UIView *const titleView = [expandedCustomInterfaceOverrides objectForKey:kJRCaptureConventionalSigninTitleView];
-    JRConventionalSignInViewController *controller =
-            [JRConventionalSignInViewController conventionalSignInViewController:nativeSigninType
-                                                                     titleString:nativeSignInTitleString
-                                                                       titleView:titleView
-                                                                   engageWrapper:singleton];
-    singleton.nativeSigninViewController = controller;
+    UIView *const titleView = [expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleView];
+    JRTraditionalSignInViewController *controller =
+            [JRTraditionalSignInViewController traditionalSignInViewController:nativeSignInType
+                                                                   titleString:nativeSignInTitleString
+                                                                     titleView:titleView
+                                                                 engageWrapper:singleton];
+    singleton.nativeSignInViewController = controller;
 
-    [expandedCustomInterfaceOverrides setObject:[singleton nativeSigninViewController].view
+    [expandedCustomInterfaceOverrides setObject:[singleton nativeSignInViewController].view
                                          forKey:kJRProviderTableHeaderView];
 
-    [expandedCustomInterfaceOverrides setObject:[singleton nativeSigninViewController]
-                                         forKey:kJRCaptureConventionalSigninViewController];
+    [expandedCustomInterfaceOverrides setObject:[singleton nativeSignInViewController]
+                                         forKey:kJRCaptureTraditionalSignInViewController];
 }
 
 
 + (void)startAuthenticationDialogOnProvider:(NSString *)provider
                withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
                                  mergeToken:(NSString *)mergeToken
-                                forDelegate:(id <JRCaptureSignInDelegate>)delegate
+                                forDelegate:(id <JRCaptureDelegate>)delegate
 {
     [JREngage updateTokenUrl:[JRCaptureData captureTokenUrlWithMergeToken:mergeToken]];
 
@@ -167,20 +181,30 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
     [JREngage showAuthenticationDialogForProvider:provider withCustomInterfaceOverrides:customInterfaceOverrides];
 }
 
+- (void)tearingDownViewControllers:(NSNotification *)notification {
+    DLog();
+    self.didTearDownViewControllers = YES;
+}
+
 - (void)engageLibraryTearDown
 {
-    [JREngage updateTokenUrl:nil];
-    self.delegate = nil;
-    self.nativeSigninViewController = nil;
-    self.engageToken = nil;
+    DLog();
+    if (self.didTearDownViewControllers) {
+        DLog();
+        [JREngage updateTokenUrl:nil];
+        self.delegate = nil;
+        self.nativeSignInViewController = nil;
+        self.engageToken = nil;
+        self.didTearDownViewControllers = NO;
+    }
 }
 
 - (void)authenticationCallToTokenUrl:(NSString *)tokenUrl didFailWithError:(NSError *)error
                          forProvider:(NSString *)provider
 {
     DLog();
-    if ([delegate respondsToSelector:@selector(captureAuthenticationDidFailWithError:)])
-        [delegate captureAuthenticationDidFailWithError:error];
+    if ([delegate respondsToSelector:@selector(captureSignInDidFailWithError:)])
+        [delegate captureSignInDidFailWithError:error];
 
     [self engageLibraryTearDown];
 }
@@ -197,8 +221,8 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
 - (void)authenticationDidNotComplete
 {
     DLog();
-    if ([delegate respondsToSelector:@selector(engageSigninDidNotComplete)])
-        [delegate engageSigninDidNotComplete];
+    if ([delegate respondsToSelector:@selector(engageAuthenticationDidCancel)])
+        [delegate engageAuthenticationDidCancel];
 
     [self engageLibraryTearDown];
 }
@@ -207,7 +231,7 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
                             andPayload:(NSData *)tokenUrlPayload forProvider:(NSString *)provider
 {
     NSString *payload = [[[NSString alloc] initWithData:tokenUrlPayload encoding:NSUTF8StringEncoding] autorelease];
-    NSDictionary *payloadDict = [payload objectFromJSONString];
+    NSDictionary *payloadDict = [payload JR_objectFromJSONString];
 
     DLog(@"%@", payload);
 
@@ -224,13 +248,7 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
         return;
     }
 
-    FinishSignInError error = [JRCaptureApidInterface finishSignInWithPayload:payloadDict forDelegate:delegate];
-
-    if (error == cJRInvalidResponse || error == cJRInvalidCaptureUser)
-    {
-        [self authenticationCallToTokenUrl:tokenUrl didFailWithError:[JRCaptureError invalidApiResponseErrorWithString:payload]
-                               forProvider:provider];
-    }
+    [JRCapture signInHandler:payloadDict error:nil delegate:delegate];
 
     [self engageLibraryTearDown];
 }
@@ -240,16 +258,16 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
     self.engageToken = [auth_info objectForKey:@"token"];
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 
-    if ([delegate respondsToSelector:@selector(engageSigninDidSucceedForUser:forProvider:)])
-        [delegate engageSigninDidSucceedForUser:auth_info forProvider:provider];
+    if ([delegate respondsToSelector:@selector(engageAuthenticationDidSucceedForUser:forProvider:)])
+        [delegate engageAuthenticationDidSucceedForUser:auth_info forProvider:provider];
 }
 
 - (void)engageDialogDidFailToShowWithError:(NSError *)error
 {
     if (dialogState == JREngageDialogStateAuthentication)
     {
-        if ([delegate respondsToSelector:@selector(engageSigninDialogDidFailToShowWithError:)])
-            [delegate engageSigninDialogDidFailToShowWithError:error];
+        if ([delegate respondsToSelector:@selector(engageAuthenticationDialogDidFailToShowWithError:)])
+            [delegate engageAuthenticationDialogDidFailToShowWithError:error];
     }
 
     [self engageLibraryTearDown];
@@ -257,9 +275,11 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+
     [delegate release];
 
-    [nativeSigninViewController release];
+    [nativeSignInViewController release];
     [engageToken release];
     [super dealloc];
 }

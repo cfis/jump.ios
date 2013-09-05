@@ -31,15 +31,25 @@
 #import <Foundation/Foundation.h>
 #import "JRCaptureUser.h"
 
-@interface JRCaptureUser (JRCaptureUser_Internal)
-+ (id)captureUserObjectFromDictionary:(NSDictionary*)dictionary withPath:(NSString *)capturePath;
-- (void)decodeFromDictionary:(NSDictionary *)dictionary;
+/**
+ * @internal
+ */
+@interface JRCaptureUser (Private)
++ (id)captureUserObjectFromDictionary:(NSDictionary *)dictionary withPath:(NSString *)capturePath;
 
+- (void)decodeFromDictionary:(NSDictionary *)dictionary;
+@end
+
+/**
+ * @internal
+ */
+@interface JRCaptureUser (JRCaptureUser_Internal_Extras)
 - (NSMutableDictionary *)toFormFieldsForForm:(NSString *)formName withFlow:(NSDictionary *)flow;
 
-+ (JRCaptureUser *)captureUserObjectWithPrefilledFields:(NSDictionary *)prefilledFields forForm:(NSString *)form
-                                                   flow:(NSDictionary *)flow;
++ (JRCaptureUser *)captureUserObjectWithPrefilledFields:(NSDictionary *)prefilledFields flow:(NSDictionary *)flow;
 @end
+
+@protocol JRCaptureObjectDelegate;
 
 /**
  * @brief
@@ -98,10 +108,10 @@
  *   asynchronous Capture methods to facilitate correlation of the response messages with the calling code. Use of the
  *   context is entirely optional and at your discretion.
  **/
-+ (void)fetchCaptureUserFromServerForDelegate:(id<JRCaptureUserDelegate>)delegate context:(NSObject *)context __unused;
++ (void)fetchCaptureUserFromServerForDelegate:(id <JRCaptureUserDelegate>)delegate context:(NSObject *)context __unused;
 
 /**
  * @internal
  **/
-+ (id)captureUserObjectFromDictionary:(NSDictionary*)dictionary;
++ (id)captureUserObjectFromDictionary:(NSDictionary *)dictionary;
 @end

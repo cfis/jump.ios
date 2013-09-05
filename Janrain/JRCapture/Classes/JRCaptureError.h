@@ -30,15 +30,16 @@
 
 
 #import <Foundation/Foundation.h>
-#import "JRCaptureUser.h"
-#import "JRConnectionManager.h"
+
+@protocol JRConnectionManagerDelegate;
+@class JRCaptureUser;
 
 /**
  * @file
  * @defgroup captureErrors Capture Errors
  *
  * Capture-related error codes and explanations that you may receive through the delegate methods of the
- * JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureSignInDelegate protocols.
+ * JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureDelegate protocols.
  *
  * @{
  **/
@@ -60,7 +61,7 @@ typedef enum
 } JRCaptureGenericError;
 
 /**
- * Errors received from the JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureSignInDelegate protocols
+ * Errors received from the JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureDelegate protocols
  * when they fail locally
  **/
 typedef enum
@@ -69,7 +70,7 @@ typedef enum
     JRCaptureLocalApidErrorInvalidArrayElement  = JRCaptureLocalApidErrorGeneric + 101, /**< Error returned when an object or its parent is an element of an array, and the array needs to be replaced on Capture first. @sa JRCaptureObject#canBeUpdatedOnCapture */
     JRCaptureLocalApidErrorUrlConnection        = JRCaptureLocalApidErrorGeneric + 201, /**< Error returned when a URL connection could not be established */
     JRCaptureLocalApidErrorConnectionDidFail    = JRCaptureLocalApidErrorGeneric + 202, /**< Error returned when a URL connection failed */
-    JRCaptureLocalApidErrorInvalidArgument = JRCaptureLocalApidErrorGeneric + 203, /**< Error returned when an invalid parameter has been passed to a Capture method */
+    JRCaptureLocalApidErrorInvalidArgument      = JRCaptureLocalApidErrorGeneric + 203, /**< Error returned when an invalid parameter has been passed to a Capture method */
     JRCaptureLocalApidErrorInvalidResultClass   = JRCaptureLocalApidErrorGeneric + 301, /**< Error returned when the JSON returned by Capture wasn't the expected structure (e.g., a string when expecting a plural) */
     JRCaptureLocalApidErrorInvalidResultStat    = JRCaptureLocalApidErrorGeneric + 302, /**< Error returned when the stat returned by Capture is missing or something unexpected */
     JRCaptureLocalApidErrorInvalidResultData    = JRCaptureLocalApidErrorGeneric + 303, /**< Error returned when the data returned by Capture was unexpected or incorrect */
@@ -87,7 +88,7 @@ typedef enum
 } JRCaptureLocalError;
 
 /**
- * Errors received from the JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureSignInDelegate protocols
+ * Errors received from the JRCaptureObjectDelegate, JRCaptureUserDelegate, and JRCaptureDelegate protocols
  * when they fail on the Capture server. These errors correspond to the errors listed on the
  * <a href="http://developers.janrain.com/documentation/capture/api-use-and-error-codes/">
  *     Capture RESTful API Documentation Page</a>
@@ -130,7 +131,7 @@ typedef enum
 } JRCaptureApidError;
 
 /**
- * Generic errors received from the JRCaptureSignInDelegate protocols when sign-in through Engage fails
+ * Generic errors received from the JRCaptureDelegate protocols when sign-in through Engage fails
  **/
 typedef enum
 {
@@ -185,6 +186,7 @@ typedef enum
 + (NSDictionary *)invalidClassErrorDictForResult:(NSObject *)result;
 + (NSDictionary *)invalidStatErrorDictForResult:(NSObject *)result;
 + (NSDictionary *)invalidDataErrorDictForResult:(NSObject *)result;
+
 + (NSDictionary *)invalidParameterErrorDictWithParam:(NSString *)param;
 @end
 
@@ -193,9 +195,14 @@ typedef enum
 */
 @interface NSError (JRCaptureError_Extensions)
 - (BOOL)isJRMergeFlowError;
+- (BOOL)isJRTwoStepRegFlowError;
 - (BOOL)isJRFormValidationError;
 - (NSString *)JRMergeFlowConflictedProvider __unused;
 - (NSString *)JRMergeFlowExistingProvider;
 - (NSString *)JRMergeToken;
+- (JRCaptureUser *)JRPreregistrationRecord;
+
+- (NSString *)JRSocialRegistrationToken;
+
 - (NSDictionary *)JRValidationFailureMessages;
 @end

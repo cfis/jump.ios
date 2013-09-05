@@ -37,6 +37,7 @@
 #import "JREngageError.h"
 #import "JRUserInterfaceMaestro.h"
 #import "JREngage+CustomInterface.h"
+#import "JRJsonUtils.h"
 
 static NSString *serverUrl = @"https://rpxnow.com";
 
@@ -58,6 +59,8 @@ static NSString *const CONFIG_KEY_SHARING_PROVIDERS = @"social_providers";
 #define cJRHidePoweredBy                @"jrengage.sessionData.hidePoweredBy"
 #define cJRLastUsedSharingProvider       @"jrengage.sessionData.lastUsedSocialProvider"
 #define cJRLastUsedAuthenticationProvider        @"jrengage.sessionData.lastUsedBasicProvider"
+
+#define cJRUserDefaultsUuidName @"jrUserDefaultsUuidName"
 
 #define cJREngageKeychainIdentifier     @"device_tokens.janrain"
 
@@ -97,10 +100,27 @@ static NSString *applicationBundleDisplayName()
     return [infoPlist objectForKey:@"CFBundleDisplayName"];
 }
 
-#pragma mark JREngageError ()
-@interface JREngageError (JREngageError_setError)
-+ (NSError *)setError:(NSString *)message withCode:(NSInteger)code;
-@end
+static void deleteWebViewCookiesForDomains(NSArray *domains)
+{
+    if (!domains) return;
+    NSHTTPCookieStorage* cookies = [NSHTTPCookieStorage sharedHTTPCookieStorage];
+
+    NSArray* cookiesWithDomain;
+    for (NSString *domain in domains)
+    {
+        /* http:// */
+        NSString *domainBaseUrl = [NSString stringWithFormat:@"http://%@", domain];
+        cookiesWithDomain = [cookies cookiesForURL:[NSURL URLWithString:domainBaseUrl]];
+        for (NSHTTPCookie* cookie in cookiesWithDomain)
+            [cookies deleteCookie:cookie];
+
+        /* https:// */
+        domainBaseUrl = [NSString stringWithFormat:@"https://%@", domain];
+        cookiesWithDomain = [cookies cookiesForURL:[NSURL URLWithString:domainBaseUrl]];
+        for (NSHTTPCookie* cookie in cookiesWithDomain)
+            [cookies deleteCookie:cookie];
+    }
+}
 
 #pragma mark JRActivityObject ()
 @interface JRActivityObject (JRActivityObject_shortenedUrl)
@@ -239,9 +259,9 @@ static NSString *applicationBundleDisplayName()
 
 #pragma mark JRProvider
 @interface JRProvider ()
-@property (readonly) BOOL      social;
-@property (readonly) NSString *openIdIdentifier; // already URL encoded
-@property (readonly) NSString *relativeUrl;
+@property (nonatomic, readonly) BOOL      social;
+@property (nonatomic, readonly) NSString *openIdIdentifier; // already URL encoded
+@property (nonatomic, readonly) NSString *relativeUrl;
 - (JRProvider *)initWithName:(NSString *)name andDictionary:(NSDictionary *)dictionary;
 @end
 
@@ -258,7 +278,6 @@ static NSString *applicationBundleDisplayName()
 @synthesize cookieDomains           = _cookieDomains;
 @synthesize customUserAgentString;
 
-- (NSString *)userInput { return _userInput; }
 - (void)setUserInput:(NSString *)userInput
 {
     [userInput retain], [_userInput release];
@@ -269,12 +288,11 @@ static NSString *applicationBundleDisplayName()
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (BOOL)forceReauth { return _forceReauth; }
-- (void)setForceReauth:(BOOL)forceReauth
+- (void)setForceReauthStartUrlFlag:(BOOL)forceReauthStartUrlFlag
 {
-    _forceReauth = forceReauth;
+    _forceReauthStartUrlFlag = forceReauthStartUrlFlag;
 
-    [[NSUserDefaults standardUserDefaults] setBool:_forceReauth
+    [[NSUserDefaults standardUserDefaults] setBool:_forceReauthStartUrlFlag
                                             forKey:[NSString stringWithFormat:cJRProviderForceReauth, self.name]];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
@@ -283,7 +301,7 @@ static NSString *applicationBundleDisplayName()
 {
     _userInput     = [[[NSUserDefaults standardUserDefaults]
                        stringForKey:[NSString stringWithFormat:cJRProviderUserInput, _name]] retain];
-    _forceReauth   =  [[NSUserDefaults standardUserDefaults]
+    _forceReauthStartUrlFlag =  [[NSUserDefaults standardUserDefaults]
                        boolForKey:[NSString stringWithFormat:cJRProviderForceReauth, _name]];
 }
 
@@ -390,6 +408,13 @@ static NSString *applicationBundleDisplayName()
     return NO;
 }
 
+- (void)clearCookiesOnCookieDomains
+{
+    if ([self.cookieDomains count])
+        deleteWebViewCookiesForDomains(self.cookieDomains);
+}
+
+
 - (void)dealloc
 {
     [_name release];
@@ -403,6 +428,13 @@ static NSString *applicationBundleDisplayName()
     [_cookieDomains release];
     [customUserAgentString release];
     [super dealloc];
+}
+
+- (void)forceReauth
+{
+    if ([self.cookieDomains count])
+        [self clearCookiesOnCookieDomains];
+    else self.forceReauthStartUrlFlag = YES; // MOB-135
 }
 @end
 
@@ -420,16 +452,13 @@ static NSString *applicationBundleDisplayName()
     JRActivityObject *activity;
 
     NSString *tokenUrl;
-    NSString *baseUrl;
     NSString *appId;
 
     BOOL hidePoweredBy;
-    //BOOL authenticatingDirectlyOnThisProvider;
     BOOL alwaysForceReauth;
-    //BOOL forceReauthJustThisTime;
 
     BOOL socialSharing;
-    BOOL dialogIsShowing;
+    BOOL authenticationFlowIsInFlight;
     BOOL stillNeedToShortenUrls;
 
     NSError *error;
@@ -471,8 +500,6 @@ static NSString *applicationBundleDisplayName()
 @synthesize returningSharingProvider;
 @synthesize returningAuthenticationProvider;
 @synthesize currentProvider;
-//@synthesize authenticatingDirectlyOnThisProvider;
-//@synthesize forceReauthJustThisTime;
 @synthesize socialSharing;
 
 @synthesize alwaysForceReauth;
@@ -507,24 +534,24 @@ static JRSessionData *singleton = nil;
 - (id)autorelease           { return self; }
 
 #pragma mark accessors
-- (BOOL)dialogIsShowing
+- (BOOL)authenticationFlowIsInFlight
 {
-    return dialogIsShowing;
+    return authenticationFlowIsInFlight;
 }
 
-- (void)setDialogIsShowing:(BOOL)isShowing
+- (void)setAuthenticationFlowIsInFlight:(BOOL)isInFlight
 {
     /* If we found out that the configuration changed while a dialog was showing, we saved it until the dialog wasn't
     showing since the dialogs dynamically load our data. Now that the dialog isn't showing, load the saved
     configuration information. */
-    if (!isShowing && savedConfigurationBlock)
+    if (!isInFlight && savedConfigurationBlock)
         self.error = [self updateConfig:savedConfigurationBlock];
 
     /* If the dialog is going away, then we don't still need to shorten the urls */
-    if (!isShowing)
+    if (!isInFlight)
         stillNeedToShortenUrls = NO;
 
-    dialogIsShowing = isShowing;
+    authenticationFlowIsInFlight = isInFlight;
 }
 
 - (JRActivityObject *)activity
@@ -675,7 +702,7 @@ static JRSessionData *singleton = nil;
                                                   withTag:GET_CONFIGURATION_TAG])
     {
         NSString *errMsg = @"There was a problem connecting to the Janrain server while configuring authentication.";
-        return [JREngageError setError:errMsg withCode:JRUrlError];
+        return [JREngageError errorWithMessage:errMsg andCode:JRUrlError];
     }
 
     return nil;
@@ -715,8 +742,6 @@ static JRSessionData *singleton = nil;
                                               forKey:cJRProvidersWithIcons];
 
     [engageAuthenticationProviders release];
-    [self.sharingProviders release];
-
     engageAuthenticationProviders =
             [[NSArray arrayWithArray:[configDict objectForKey:CONFIG_KEY_SIGNIN_PROVIDERS]] retain];
     self.sharingProviders = [NSArray arrayWithArray:[configDict objectForKey:CONFIG_KEY_SHARING_PROVIDERS]];
@@ -747,18 +772,18 @@ static JRSessionData *singleton = nil;
     if (max > MAX_LOGGED_CONFIG_RESPONSE_LENGTH) max = MAX_LOGGED_CONFIG_RESPONSE_LENGTH;
     ALog (@"Configuration information downloaded (%d): %@", [response statusCode], [configJson substringToIndex:max]);
 
-    NSDictionary *configDict = (NSDictionary *)[configJson objectFromJSONString];
+    NSDictionary *configDict = [configJson JR_objectFromJSONString];
     NSString *err = @"There was a problem communicating with the Janrain server while configuring authentication.";
     if (!configDict)
     {
         ALog(@"%@", configJson);
-        return [JREngageError setError:err withCode:JRJsonError];
+        return [JREngageError errorWithMessage:err andCode:JRJsonError];
     }
 
     if (![configDict objectForKey:CONFIG_KEY_BASEURL] || ![configDict objectForKey:CONFIG_KEY_PROVIDER_INFO])
     {
         ALog(@"%@", configJson);
-        return [JREngageError setError:err withCode:JRConfigurationInformationError];
+        return [JREngageError errorWithMessage:err andCode:JRConfigurationInformationError];
     }
 
     self.updatedEtag = ([self etagFromResponse:response]);
@@ -772,7 +797,7 @@ static JRSessionData *singleton = nil;
     indicator and a loading message, as they wait for the lists of providers to download, so we can go ahead and
     update the configuration information here, too. The dialogs won't try and do anything until we're done updating
     the lists. */
-    if (!dialogIsShowing
+    if (!authenticationFlowIsInFlight
             || ([engageAuthenticationProviders count] == 0 && !socialSharing)
             || ([sharingProviders count] == 0 && socialSharing))
     {
@@ -829,13 +854,11 @@ static JRSessionData *singleton = nil;
 - (void)forgetAuthenticatedUserForProvider:(NSString *)providerName
 {
     DLog (@"");
-
-    if (!providerName) return;
     JRProvider* provider = [engageProviders objectForKey:providerName];
-    if (!provider) return;
-    //provider.forceReauth = YES;
-    [self deleteWebViewCookiesForDomains:[provider cookieDomains]];
 
+    if (!provider) return;
+
+    [provider forceReauth];
     [authenticatedUsersByProvider removeObjectForKey:providerName];
     NSData *usersData = [NSKeyedArchiver archivedDataWithRootObject:authenticatedUsersByProvider];
     [[NSUserDefaults standardUserDefaults] setObject:usersData forKey:cJRAuthenticatedUsersByProvider];
@@ -925,28 +948,6 @@ static JRSessionData *singleton = nil;
     return nil;
 }
 
-- (void)deleteWebViewCookiesForDomains:(NSArray *)domains
-{
-    if (!domains) return;
-    NSHTTPCookieStorage* cookies = [NSHTTPCookieStorage sharedHTTPCookieStorage];
-
-    NSArray* cookiesWithDomain;
-    for (NSString *domain in domains)
-    {
-        /* http:// */
-        NSString *domainBaseUrl = [NSString stringWithFormat:@"http://%@", domain];
-        cookiesWithDomain = [cookies cookiesForURL:[NSURL URLWithString:domainBaseUrl]];
-        for (NSHTTPCookie* cookie in cookiesWithDomain)
-            [cookies deleteCookie:cookie];
-
-        /* https:// */
-        domainBaseUrl = [NSString stringWithFormat:@"https://%@", domain];
-        cookiesWithDomain = [cookies cookiesForURL:[NSURL URLWithString:domainBaseUrl]];
-        for (NSHTTPCookie* cookie in cookiesWithDomain)
-            [cookies deleteCookie:cookie];
-    }
-}
-
 - (NSURL *)startUrlForCurrentProvider
 {
     return [self startUrlForProvider:self.currentProvider];
@@ -979,19 +980,42 @@ static JRSessionData *singleton = nil;
         extraParamString = [NSString stringWithFormat:@"saml_provider=%@&", provider.samlName];
     }
 
-    BOOL forceReauth = (alwaysForceReauth || currentProvider.forceReauth) ? YES : NO;
+    NSString *uuid = [[self deviceIdentifier] stringByAddingUrlPercentEscapes];
 
-    if (forceReauth)
-        [self deleteWebViewCookiesForDomains:provider.cookieDomains];
+    BOOL forceReauthFlag = (alwaysForceReauth || currentProvider.forceReauthStartUrlFlag) ? YES : NO;
 
-    NSString *urlString = [NSString stringWithFormat:@"%@%@?%@%@device=%@&extended=true",
+    if (forceReauthFlag)
+        deleteWebViewCookiesForDomains(provider.cookieDomains);
+
+    NSString *urlString = [NSString stringWithFormat:@"%@%@?%@%@device=%@&extended=true&installation_id=%@",
                                                      baseUrl, provider.relativeUrl, extraParamString,
-                                                     forceReauth ? @"force_reauth=true&" : @"", [self device]];
+                                                     forceReauthFlag ? @"force_reauth=true&" : @"",
+                                                     [self device], uuid];
 
-    provider.forceReauth = NO;
-
+    provider.forceReauthStartUrlFlag = NO;
     ALog (@"Starting authentication for %@:\n%@", provider.name, urlString);
     return [NSURL URLWithString:urlString];
+}
+
+- (NSString *)deviceIdentifier
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *uuid = [defaults objectForKey:cJRUserDefaultsUuidName];
+
+    if (!uuid)
+    {
+        // Using the core foundation version of UUID because NSUUID is only supported
+        // in iOS 6.0+. CFUUIDRef is supported all the way back to iOS 2.0.
+        CFUUIDRef cfUUID = CFUUIDCreate(NULL);
+        uuid = [(NSString *)CFUUIDCreateString(NULL, cfUUID) autorelease];
+
+        [defaults setObject:uuid forKey:cJRUserDefaultsUuidName];
+        [defaults synchronize];
+
+        CFRelease(cfUUID);
+    }
+
+    return uuid;
 }
 
 #pragma mark sharing
@@ -1008,7 +1032,7 @@ static JRSessionData *singleton = nil;
     }
 
 
-    NSString *activityContent = [[activityDictionary JSONString] stringByAddingUrlPercentEscapes];
+    NSString *activityContent = [[activityDictionary JR_jsonString] stringByAddingUrlPercentEscapes];
     NSString *deviceToken = user.deviceToken;
 
     DLog(@"activity json string \n %@", activityContent);
@@ -1042,7 +1066,8 @@ static JRSessionData *singleton = nil;
     if (![JRConnectionManager createConnectionFromRequest:request forDelegate:self withTag:tag])
     {
         NSString *message = @"There was a problem connecting to the Janrain server to share this activity";
-        [self triggerPublishingDidFailWithError:[JREngageError setError:message withCode:JRPublishErrorBadConnection]];
+        [self triggerPublishingDidFailWithError:[JREngageError errorWithMessage:message
+                                                                        andCode:JRPublishErrorBadConnection]];
     }
 }
 
@@ -1081,7 +1106,8 @@ static JRSessionData *singleton = nil;
     if (![JRConnectionManager createConnectionFromRequest:request forDelegate:self withTag:tag])
     {
         NSString *message = @"There was a problem connecting to the Janrain server to share this activity";
-        [self triggerPublishingDidFailWithError:[JREngageError setError:message withCode:JRPublishErrorBadConnection]];
+        [self triggerPublishingDidFailWithError:[JREngageError errorWithMessage:message
+                                                                        andCode:JRPublishErrorBadConnection]];
     }
 }
 
@@ -1099,7 +1125,7 @@ static JRSessionData *singleton = nil;
 {
     ALog (@"Activity sharing response: %@", response);
 
-    NSDictionary *responseDict = [response objectFromJSONString];
+    NSDictionary *responseDict = [response JR_objectFromJSONString];
 
     if (!responseDict)
     {
@@ -1108,8 +1134,8 @@ static JRSessionData *singleton = nil;
         {
             if ([delegate respondsToSelector:@selector(publishingActivity:didFailWithError:forProvider:)])
                 [delegate publishingActivity:_activity
-                            didFailWithError:[JREngageError setError:[NSString stringWithString:response]
-                                                            withCode:JRPublishFailedError]
+                            didFailWithError:[JREngageError errorWithMessage:[NSString stringWithString:response]
+                                                                     andCode:JRPublishFailedError]
                                  forProvider:providerName];
         }
         return;
@@ -1132,8 +1158,8 @@ static JRSessionData *singleton = nil;
 
         if (!errorDict)
         {
-            publishError = [JREngageError setError:@"There was a problem publishing this activity"
-                                          withCode:JRPublishFailedError];
+            publishError = [JREngageError errorWithMessage:@"There was a problem publishing this activity"
+                                                   andCode:JRPublishFailedError];
         }
         else
         {
@@ -1149,13 +1175,13 @@ static JRSessionData *singleton = nil;
 
                  /* Missing apiKey; this error should prompt a reauthentication. */
                     if ([errorMessage isEqualToString:@"Missing parameter: apiKey"])
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorMissingApiKey];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorMissingApiKey];
 
                  /* Missing some other parameter: activity/url/etc." */
                     else
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorMissingParameter];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorMissingParameter];
                     break;
 
                 case 4: /* "Facebook Error: ..." */
@@ -1169,70 +1195,70 @@ static JRSessionData *singleton = nil;
                                              options:NSCaseInsensitiveSearch].location != NSNotFound) ||
                         ([errorMessage rangeOfString:@"Error validating access token"
                                              options:NSCaseInsensitiveSearch].location != NSNotFound))
-                            publishError = [JREngageError setError:errorMessage
-                                                          withCode:JRPublishErrorInvalidFacebookSession];
+                            publishError = [JREngageError errorWithMessage:errorMessage
+                                                                   andCode:JRPublishErrorInvalidFacebookSession];
 
                  /* Bad image error: "One or more of your image records failed to include a valid 'href' field" */
                     else if ([errorMessage rangeOfString:@"image records failed"
                                                  options:NSCaseInsensitiveSearch].location != NSNotFound)
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorInvalidFacebookMedia];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorInvalidFacebookMedia];
 
                  /* Bad flash object error: "flash objects must have the 'source' and 'picture' attributes/etc." */
                     else if ([errorMessage rangeOfString:@"flash objects must"
                                                  options:NSCaseInsensitiveSearch].location != NSNotFound)
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorInvalidFacebookMedia];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorInvalidFacebookMedia];
 
                  /* Any other generic Facebook error */
                     else
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorFacebookGeneric];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorFacebookGeneric];
 
                     break;
 
                 case 6: /* Error interacting with a previously operational provider */
                  /* Twitter duplicate message error: "Twitter server error: Status is a duplicate." */
                     if ([errorMessage isEqualToString:@"Twitter server error: Status is a duplicate."])
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishErrorDuplicateTwitter];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishErrorDuplicateTwitter];
                  /* Any other error with code 6 */
                     else
-                        publishError = [JREngageError setError:errorMessage
-                                                      withCode:JRPublishFailedError];
+                        publishError = [JREngageError errorWithMessage:errorMessage
+                                                               andCode:JRPublishFailedError];
                     break;
 
                 case 13: /* Twitter Error */
-                    publishError = [JREngageError setError:errorMessage
-                                                  withCode:JRPublishErrorTwitterGeneric];
+                    publishError = [JREngageError errorWithMessage:errorMessage
+                                                           andCode:JRPublishErrorTwitterGeneric];
                     break;
 
                 case 14: /* LinkedIn Error */
-                    publishError = [JREngageError setError:errorMessage
-                                                  withCode:JRPublishErrorLinkedInGeneric];
+                    publishError = [JREngageError errorWithMessage:errorMessage
+                                                           andCode:JRPublishErrorLinkedInGeneric];
                     break;
 
                 case 16: /* MySpace Error */
-                    publishError = [JREngageError setError:errorMessage
-                                                  withCode:JRPublishErrorMyspaceGeneric];
+                    publishError = [JREngageError errorWithMessage:errorMessage
+                                                           andCode:JRPublishErrorMyspaceGeneric];
                     break;
 
                 case 17: /* Yahoo Error */
-                    publishError = [JREngageError setError:errorMessage
-                                                  withCode:JRPublishErrorYahooGeneric];
+                    publishError = [JREngageError errorWithMessage:errorMessage
+                                                           andCode:JRPublishErrorYahooGeneric];
                     break;
 
                 case 100: /* Character limit error?  Not documented on rpxnow.com. */
                  /* Formerly LinkedIn character limit error (JRPublishErrorLinkedInCharacterExceeded) */
-                    publishError = [JREngageError setError:errorMessage
-                                                  withCode:JRPublishErrorCharacterLimitExceeded];
+                    publishError = [JREngageError errorWithMessage:errorMessage
+                                                           andCode:JRPublishErrorCharacterLimitExceeded];
                     break;
 
 
                 case 1000: /* Extracting code failed; Fall through. */
                 default:   /* See below for list of ignored error codes. */
-                    publishError = [JREngageError setError:@"There was a problem publishing this activity"
-                                                  withCode:JRPublishFailedError];
+                    publishError = [JREngageError errorWithMessage:@"There was a problem publishing this activity"
+                                                           andCode:JRPublishFailedError];
                     break;
 
             /* -1:  Service Temporarily Unavailable
@@ -1313,9 +1339,9 @@ static JRSessionData *singleton = nil;
     if (theActivity.sms.urls)   [urls setObject:theActivity.email.urls forKey:@"sms"];
     if (theActivity.url)        [urls setObject:[NSArray arrayWithObject:theActivity.url] forKey:@"activity"];
 
+    NSString *urlsArg = [[urls JR_jsonString] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     NSString *urlString = [NSString stringWithFormat:@"%@/openid/get_urls?urls=%@&app_name=%@&device=%@",
-                           baseUrl, [[urls JSONString]/*JSONRepresentation]*/ stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
-                            [self appNameAndVersion], [self device]];
+                                                     baseUrl, urlsArg, [self appNameAndVersion], [self device]];
 
     DLog (@"Getting shortened URLs: %@", urlString);
 
@@ -1331,7 +1357,7 @@ static JRSessionData *singleton = nil;
 {
     DLog ("Shortened Urls: %@", urls);
 
-    NSDictionary *dict = [urls objectFromJSONString];
+    NSDictionary *dict = [urls JR_objectFromJSONString];
 
     if (!dict)
         goto CALL_DELEGATE_SELECTOR;
@@ -1387,8 +1413,8 @@ CALL_DELEGATE_SELECTOR:
 
     if (![JRConnectionManager createConnectionFromRequest:request forDelegate:self returnFullResponse:YES withTag:tag])
     {
-        NSError *_error = [JREngageError setError:@"Problem initializing the connection to the token url"
-                                         withCode:JRAuthenticationTokenUrlFailedError];
+        NSError *_error = [JREngageError errorWithMessage:@"Problem initializing the connection to the token url"
+                                                  andCode:JRAuthenticationTokenUrlFailedError];
 
         NSArray *delegatesCopy = [NSArray arrayWithArray:delegates];
         for (id<JRSessionDelegate> delegate in delegatesCopy)
@@ -1496,8 +1522,8 @@ CALL_DELEGATE_SELECTOR:
 
         if ([(NSString *)tag isEqualToString:GET_CONFIGURATION_TAG])
         {
-            self.error = [JREngageError setError:@"There was a problem communicating with the Janrain server while configuring authentication."
-                                        withCode:JRConfigurationInformationError];
+            self.error = [JREngageError errorWithMessage:@"There was a problem communicating with the Janrain server while configuring authentication."
+                                                 andCode:JRConfigurationInformationError];
         }
         else if ([(NSString *)tag isEqualToString:@"emailSuccess"])
         {
@@ -1577,23 +1603,27 @@ CALL_DELEGATE_SELECTOR:
 #pragma mark trigger_methods
 - (void)triggerAuthenticationDidCompleteWithPayload:(NSDictionary *)payloadDict
 {
- /* This value will be nil if authentication was canceled after the user authenticated in the
-    WebView, but before the authentication call was completed, like in the case where the calling
-    application issues the cancelAuthentication command. */
+    // This value will be nil if authentication was canceled after the user authenticated in the
+    // WebView, but before the authentication call was completed, like in the case where the calling
+    // application issues the cancelAuthentication command.
     if (!currentProvider)
         return;
 
-    NSDictionary *goodies = [payloadDict objectForKey:@"rpx_result"];
-    NSString *token = [goodies objectForKey:@"token"];
-    NSMutableDictionary *auth_info = [NSMutableDictionary dictionaryWithDictionary:[goodies objectForKey:@"auth_info"]];
+    NSDictionary *rpxResult = [payloadDict objectForKey:@"rpx_result"];
+    NSString *token = [rpxResult objectForKey:@"token"];
+    NSMutableDictionary *authInfo = [[[rpxResult objectForKey:@"auth_info"] mutableCopy] autorelease];
 
-    [auth_info setObject:token forKey:@"token"];
+    [authInfo setObject:token forKey:@"token"];
 
-    DLog (@"Authentication completed for user: %@", [goodies description]);
+    DLog (@"Authentication completed for user: %@", [rpxResult description]);
 
-    JRAuthenticatedUser *user = [[[JRAuthenticatedUser alloc] initUserWithDictionary:goodies
-                                                                    andWelcomeString:[self getWelcomeMessageFromCookie]
-                                                                    forProviderNamed:currentProvider.name] autorelease];
+    JRAuthenticatedUser *user = nil;
+    if ([authInfo count] > 0) // native auth only provides an empty auth_info blob
+    {
+        user = [[[JRAuthenticatedUser alloc] initUserWithDictionary:rpxResult
+                                                   andWelcomeString:[self getWelcomeMessageFromCookie]
+                                                   forProviderNamed:currentProvider.name] autorelease];
+    }
 
     if (user)
     {
@@ -1601,10 +1631,6 @@ CALL_DELEGATE_SELECTOR:
         NSData *usersData = [NSKeyedArchiver archivedDataWithRootObject:authenticatedUsersByProvider];
         [[NSUserDefaults standardUserDefaults] setObject:usersData forKey:cJRAuthenticatedUsersByProvider];
         [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-    else
-    {
-        // TODO: There could be some kind of error initializing the user!
     }
 
     if ([self.authenticationProviders containsObject:currentProvider.name] && !socialSharing)
@@ -1617,24 +1643,17 @@ CALL_DELEGATE_SELECTOR:
     for (id <JRSessionDelegate> delegate in delegatesCopy)
     {
         if ([delegate respondsToSelector:@selector(authenticationDidCompleteForUser:forProvider:)])
-            [delegate authenticationDidCompleteForUser:auth_info forProvider:currentProvider.name];
+            [delegate authenticationDidCompleteForUser:authInfo forProvider:currentProvider.name];
     }
 
     if (tokenUrl)
         [self startMakeCallToTokenUrl:tokenUrl withToken:token forProvider:currentProvider.name];
 
-    [currentProvider release];
-    currentProvider = nil;
+    self.currentProvider = nil;
 }
 
 - (void)triggerAuthenticationDidFailWithError:(NSError *)authError
 {
-    // TODO: Set force_reauth for the provider instead!!!
-//    if ([currentProvider.name isEqualToString:@"facebook"])
-//        [self deleteFacebookCookies];
-//    else if ([currentProvider.name isEqualToString:@"live_id"])
-//        [self deleteLiveCookies];
-
     NSArray *delegatesCopy = [NSArray arrayWithArray:delegates];
     for (id<JRSessionDelegate> delegate in delegatesCopy)
     {

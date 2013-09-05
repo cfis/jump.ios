@@ -34,14 +34,19 @@
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+#import "JRCaptureApidInterface.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <CommonCrypto/CommonHMAC.h>
 #import "JRCapture.h"
-
+#import "JREngage.h"
 #import "JREngageWrapper.h"
 #import "JRCaptureData.h"
 #import "debug_log.h"
 #import "JRBase64.h"
+#import "JRCaptureError.h"
+#import "JRCaptureUser+Extras.h"
+#import "JRConnectionManager.h"
+#import "NSMutableDictionary+JRDictionaryUtils.h"
 
 @implementation JRCapture
 
@@ -52,17 +57,20 @@
 
 + (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
        captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
-       captureFlowName:(NSString *)captureFlowName
-              captureFlowVersion:(NSString *)captureFlowVersion
+                 captureFlowName:(NSString *)captureFlowName captureFlowVersion:(NSString *)captureFlowVersion
 captureTraditionalSignInFormName:(NSString *)captureSignInFormName
-    captureTraditionalSignInType:(__unused JRConventionalSigninType)captureTraditionalSignInType
-                    captureAppId:(NSString *)captureAppId customIdentityProviders:(NSDictionary *)customProviders
+    captureTraditionalSignInType:(__unused JRTraditionalSignInType) tradSignInType
+         captureEnableThinRegistration:(BOOL)enableThinRegistration
+               customIdentityProviders:(NSDictionary *)customProviders
+captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:(NSString *)captureSocialRegistrationFormName
+                          captureAppId:(NSString *)captureAppId
 {
     [JRCaptureData setCaptureDomain:captureDomain captureClientId:clientId captureLocale:captureLocale
-              captureSignInFormName:captureSignInFormName captureFlowName:captureFlowName
-         captureEnableThinRegistration:YES
-captureTraditionalRegistrationFormName:nil
-     captureSocialRegistrationFormName:nil
+   captureTraditionalSignInFormName:captureSignInFormName captureFlowName:captureFlowName
+         captureEnableThinRegistration:enableThinRegistration
+captureTraditionalRegistrationFormName:captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:captureSocialRegistrationFormName
                     captureFlowVersion:captureFlowVersion captureAppId:captureAppId];
 
     [JREngageWrapper configureEngageWithAppId:engageAppId customIdentityProviders:customProviders];
@@ -70,31 +78,99 @@ captureTraditionalRegistrationFormName:nil
 
 + (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
        captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
-             captureFlowName:(NSString *)captureFlowName captureFormName:(NSString *)captureFormName
-captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInType
+                 captureFlowName:(NSString *)captureFlowName captureFlowVersion:(NSString *)captureFlowVersion
+captureTraditionalSignInFormName:(NSString *)captureSignInFormName
+   captureEnableThinRegistration:(BOOL)enableThinRegistration
+          captureTraditionalSignInType:(__unused JRTraditionalSignInType)captureTraditionalSignInType
+captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:(NSString *)captureSocialRegistrationFormName
+                          captureAppId:(NSString *)captureAppId
+               customIdentityProviders:customProviders
+{
+    [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain captureClientId:clientId
+                captureLocale:captureLocale captureFlowName:captureFlowName
+           captureFlowVersion:captureFlowVersion
+            captureTraditionalSignInFormName :captureSignInFormName
+ captureTraditionalSignInType:captureTraditionalSignInType captureEnableThinRegistration:enableThinRegistration
+               customIdentityProviders:customProviders
+captureTraditionalRegistrationFormName:captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:captureSocialRegistrationFormName
+                          captureAppId:captureAppId];
+}
+
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+                 captureFlowName:(NSString *)captureFlowName captureFlowVersion:(NSString *)captureFlowVersion
+captureTraditionalSignInFormName:(NSString *)captureSignInFormName
+   captureEnableThinRegistration:(BOOL)enableThinRegistration
+          captureTraditionalSignInType:(__unused JRTraditionalSignInType)captureTraditionalSignInType
+captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:(NSString *)captureSocialRegistrationFormName
+                          captureAppId:(NSString *)captureAppId
+{
+    [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain captureClientId:clientId
+                captureLocale:captureLocale captureFlowName:captureFlowName
+           captureFlowVersion:captureFlowVersion
+            captureTraditionalSignInFormName :captureSignInFormName
+ captureTraditionalSignInType:captureTraditionalSignInType captureEnableThinRegistration:enableThinRegistration
+          customIdentityProviders:nil captureTraditionalRegistrationFormName:captureTraditionalRegistrationFormName
+captureSocialRegistrationFormName:captureSocialRegistrationFormName
+                     captureAppId:captureAppId];
+
+}
+
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+                 captureFlowName:(NSString *)captureFlowName captureFlowVersion:(NSString *)captureFlowVersion
+captureTraditionalSignInFormName:(NSString *)captureSignInFormName
+    captureTraditionalSignInType:(JRTraditionalSignInType)captureTraditionalSignInType
+                    captureAppId:(NSString *)captureAppId customIdentityProviders:(NSDictionary *)customProviders
 {
     [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain
               captureClientId:clientId captureLocale:captureLocale
-                 captureFlowName:captureFlowName captureFlowVersion:nil
-captureTraditionalSignInFormName:captureFormName
-    captureTraditionalSignInType:captureTraditionalSignInType
-                    captureAppId:nil
-         customIdentityProviders:nil];
+                 captureFlowName:captureFlowName captureFlowVersion:captureFlowVersion
+captureTraditionalSignInFormName:captureSignInFormName
+   captureEnableThinRegistration:YES
+          captureTraditionalSignInType:captureTraditionalSignInType
+captureTraditionalRegistrationFormName:nil
+     captureSocialRegistrationFormName:nil
+                          captureAppId:captureAppId
+               customIdentityProviders:customProviders];
 }
 
 + (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
        captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
              captureFlowName:(NSString *)captureFlowName captureFormName:(NSString *)captureFormName
-captureTraditionalSignInType:(JRConventionalSigninType)captureTraditionalSignInType
+captureTraditionalSignInType:(JRTraditionalSignInType)captureTraditionalSignInType
+{
+    [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain
+              captureClientId:clientId captureLocale:captureLocale
+                 captureFlowName:captureFlowName captureFlowVersion:nil
+captureTraditionalSignInFormName:captureFormName
+   captureEnableThinRegistration:YES
+          captureTraditionalSignInType:captureTraditionalSignInType
+captureTraditionalRegistrationFormName:nil
+     captureSocialRegistrationFormName:nil
+                          captureAppId:nil
+               customIdentityProviders:nil];
+}
+
++ (void)setEngageAppId:(NSString *)engageAppId captureDomain:(NSString *)captureDomain
+       captureClientId:(NSString *)clientId captureLocale:(NSString *)captureLocale
+             captureFlowName:(NSString *)captureFlowName captureFormName:(NSString *)captureFormName
+captureTraditionalSignInType:(JRTraditionalSignInType)captureTraditionalSignInType
      customIdentityProviders:(NSDictionary *)customProviders
 {
     [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain
               captureClientId:clientId captureLocale:captureLocale
                  captureFlowName:captureFlowName captureFlowVersion:nil
 captureTraditionalSignInFormName:captureFormName
-    captureTraditionalSignInType:captureTraditionalSignInType
-                    captureAppId:nil
-         customIdentityProviders:customProviders];
+   captureEnableThinRegistration:YES
+          captureTraditionalSignInType:captureTraditionalSignInType
+captureTraditionalRegistrationFormName:nil
+     captureSocialRegistrationFormName:nil
+                          captureAppId:nil
+               customIdentityProviders:customProviders];
 }
 
 
@@ -134,87 +210,131 @@ captureTraditionalSignInFormName:captureFormName
     return [JRCaptureData sharedCaptureData].accessToken;
 }
 
-+ (void)startEngageSigninDialogForDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startEngageSignInDialogForDelegate:(id <JRCaptureDelegate>)delegate __unused
 {
-    [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:JRConventionalSigninNone
-                                         andCustomInterfaceOverrides:nil forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogWithTraditionalSignIn:JRTraditionalSignInNone
+                                        andCustomInterfaceOverrides:nil forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSignInType
-                                          forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startEngageSignInDialogWithTraditionalSignIn:(JRTraditionalSignInType)traditionalSignInType
+                                         forDelegate:(id <JRCaptureDelegate>)delegate __unused
 {
-    [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:conventionalSignInType
-                                         andCustomInterfaceOverrides:nil forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogWithTraditionalSignIn:traditionalSignInType
+                                        andCustomInterfaceOverrides:nil forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogOnProvider:(NSString *)provider
-                              forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startEngageSignInDialogOnProvider:(NSString *)provider
+                              forDelegate:(id <JRCaptureDelegate>)delegate __unused
 {
     [JREngageWrapper startAuthenticationDialogOnProvider:provider withCustomInterfaceOverrides:nil mergeToken:nil
                                              forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                                forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startEngageSignInDialogWithCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                                forDelegate:(id <JRCaptureDelegate>)delegate __unused
 {
-    [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:JRConventionalSigninNone
-                                         andCustomInterfaceOverrides:customInterfaceOverrides
-                                                         forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogWithTraditionalSignIn:JRTraditionalSignInNone
+                                        andCustomInterfaceOverrides:customInterfaceOverrides
+                                                        forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogWithConventionalSignin:(JRConventionalSigninType)conventionalSignInType
-                      andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                      forDelegate:(id <JRCaptureSignInDelegate>)delegate
++ (void)startEngageSignInDialogWithTraditionalSignIn:(JRTraditionalSignInType)traditionalSignInType
+                         andCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                                         forDelegate:(id <JRCaptureDelegate>)delegate
 {
-    [JREngageWrapper startAuthenticationDialogWithConventionalSignIn:conventionalSignInType
-                                         andCustomInterfaceOverrides:customInterfaceOverrides forDelegate:delegate];
+    [JREngageWrapper startAuthenticationDialogWithTraditionalSignIn:traditionalSignInType
+                                        andCustomInterfaceOverrides:customInterfaceOverrides forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogOnProvider:(NSString *)provider
++ (void)startEngageSignInDialogOnProvider:(NSString *)provider
              withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
                                mergeToken:(NSString *)mergeToken
-                              forDelegate:(id <JRCaptureSignInDelegate>)delegate
+                              forDelegate:(id <JRCaptureDelegate>)delegate
 {
     [JREngageWrapper startAuthenticationDialogOnProvider:provider
                             withCustomInterfaceOverrides:customInterfaceOverrides mergeToken:mergeToken
                                              forDelegate:delegate];
 }
 
-+ (void)startEngageSigninDialogOnProvider:(NSString *)provider
-               withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
-                                forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startEngageSignInDialogOnProvider:(NSString *)provider
+             withCustomInterfaceOverrides:(NSDictionary *)customInterfaceOverrides
+                              forDelegate:(id <JRCaptureDelegate>)delegate __unused
 {
     [JREngageWrapper startAuthenticationDialogOnProvider:provider
                             withCustomInterfaceOverrides:customInterfaceOverrides mergeToken:nil
                                              forDelegate:delegate];
 }
 
-+ (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
-                               withSigninType:(JRConventionalSigninType)conventionalSignInType
-                                   mergeToken:(NSString *)mergeToken forDelegate:(id <JRCaptureSignInDelegate>)delegate
++ (void)startCaptureTraditionalSignInForUser:(NSString *)user withPassword:(NSString *)password
+                              withSignInType:(JRTraditionalSignInType)traditionalSignInTypeSignInType
+                                  mergeToken:(NSString *)mergeToken forDelegate:(id <JRCaptureDelegate>)delegate
 {
-    NSString *attrName = conventionalSignInType == JRConventionalSigninEmailPassword ? @"email" :
-            conventionalSignInType == JRConventionalSigninUsernamePassword ? @"username" : nil;
-    if (!attrName) return;
-
-    NSMutableDictionary *creds = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                                              user, attrName,
-                                                              password, @"password", nil];
-    if (mergeToken) [creds setObject:mergeToken forKey:@"token"];
-
-    [JRCaptureApidInterface signInCaptureUserWithCredentials:creds ofType:attrName forDelegate:delegate
-                                                 withContext:nil];
+    [self startCaptureTraditionalSignInForUser:user withPassword:password mergeToken:mergeToken forDelegate:delegate];
 }
 
-+ (void)startCaptureConventionalSigninForUser:(NSString *)user withPassword:(NSString *)password
-                               withSigninType:(JRConventionalSigninType)conventionalSignInType
-                                  forDelegate:(id <JRCaptureSignInDelegate>)delegate __unused
++ (void)startCaptureTraditionalSignInForUser:(NSString *)user withPassword:(NSString *)password
+                                  mergeToken:(NSString *)mergeToken forDelegate:(id <JRCaptureDelegate>)delegate
 {
-    [self startCaptureConventionalSigninForUser:user withPassword:password withSigninType:conventionalSignInType
-                                     mergeToken:nil forDelegate:delegate];
+    if (!user || !password) {
+        [self maybeDispatch:@selector(captureSignInDidFailWithError:) forDelegate:delegate
+                    withArg:[JRCaptureError invalidArgumentErrorWithParameterName:@"nil username or password"]];
+        return;
+    }
+
+    NSMutableDictionary *params = [[@{@"user" : user, @"password" : password} mutableCopy] autorelease];
+    [params JR_maybeSetObject:mergeToken forKey:@"merge_token"];
+
+    NSString *secret = [JRCaptureData generateAndStoreRefreshSecret];
+    NSDictionary *tradAuthParams = [JRCaptureApidInterface tradAuthParamsWithParams:params refreshSecret:secret];
+    NSString *tradAuthUrl = [[[JRCaptureData requestWithPath:kJRTradAuthUrlPath] URL] absoluteString];
+
+    [JRConnectionManager jsonRequestToUrl:tradAuthUrl params:tradAuthParams
+                        completionHandler:^(id json, NSError *error) {
+                            [self signInHandler:json error:error delegate:delegate];
+                        }];
 }
 
-+ (void)refreshAccessTokenWithCallback:(void (^)(BOOL, NSError *))callback __unused
++ (void)signInHandler:(id)json error:(NSError *)error delegate:(id <JRCaptureDelegate>)delegate
+{
+    if (error || ![json isKindOfClass:[NSDictionary class]] || ![[json objectForKey:@"stat"] isEqual:@"ok"]) {
+        if (!error) error = [JRCaptureError errorFromResult:json onProvider:nil engageToken:nil];
+        [self maybeDispatch:@selector(captureSignInDidFailWithError:) forDelegate:delegate withArg:error];
+        return;
+    }
+
+    NSString *accessToken = [json objectForKey:@"access_token"];
+    BOOL isNew = [(NSNumber *) [json objectForKey:@"is_new"] boolValue];
+    NSDictionary *captureUserJson = [json objectForKey:@"capture_user"];
+    JRCaptureUser *captureUser = [JRCaptureUser captureUserObjectFromDictionary:captureUserJson];
+
+    if (!captureUserJson || !captureUser || !accessToken) {
+        JRCaptureError *captureError = [JRCaptureError invalidApiResponseErrorWithString:json];
+        [self maybeDispatch:@selector(captureSignInDidFailWithError:) forDelegate:delegate withArg:captureError];
+        return;
+    }
+
+    [JRCaptureData setAccessToken:accessToken];
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+
+    JRCaptureRecordStatus recordStatus = isNew ? JRCaptureRecordNewlyCreated : JRCaptureRecordExists;
+    // XXX maybeDispatch inlined here because the second arg is actually an enum and logging it as an object will
+    // seg fault, so the log statement is one-off modified here
+    DLog(@"Dispatching %@ with %@, %i", NSStringFromSelector(@selector(captureSignInDidSucceedForUser:status:)),
+        captureUser, recordStatus);
+    if ([delegate respondsToSelector:@selector(captureSignInDidSucceedForUser:status:)]) {
+        [delegate performSelector:@selector(captureSignInDidSucceedForUser:status:) withObject:captureUser
+                       withObject:(id) recordStatus];
+    }
+}
+
++ (void)startCaptureTraditionalSignInForUser:(NSString *)user withPassword:(NSString *)password
+                              withSignInType:(JRTraditionalSignInType)traditionalSignInTypeSignInType
+                                 forDelegate:(id <JRCaptureDelegate>)delegate
+{
+    [self startCaptureTraditionalSignInForUser:user withPassword:password mergeToken:nil forDelegate:delegate];
+}
+
++ (void)refreshAccessTokenForDelegate:(id <JRCaptureDelegate>)delegate context:(id <NSObject>)context
 {
     NSString *date = [self utcTimeString];
     NSString *accessToken = [JRCaptureData sharedCaptureData].accessToken;
@@ -226,7 +346,9 @@ captureTraditionalSignInFormName:captureFormName
 
     if (!signature || !accessToken || !date)
     {
-        callback(NO, [JRCaptureError invalidInternalStateErrorWithDescription:@"unable to generate signature"]);
+        [self maybeDispatch:@selector(refreshAccessTokenDidFailWithError:context:) forDelegate:delegate
+                    withArg:[JRCaptureError invalidInternalStateErrorWithDescription:@"unable to generate signature"]
+                    withArg:context];
         return;
     }
 
@@ -239,12 +361,13 @@ captureTraditionalSignInFormName:captureFormName
             @"locale" : [JRCaptureData sharedCaptureData].captureLocale,
     };
 
-    [JRCaptureApidInterface jsonRequestToUrl:refreshUrl params:params completionHandler:^(id r, NSError *e)
+    [JRConnectionManager jsonRequestToUrl:refreshUrl params:params completionHandler:^(id r, NSError *e)
     {
         if (e)
         {
             ALog(@"Failure refreshing access token: %@", e);
-            callback(NO, e);
+            [self maybeDispatch:@selector(refreshAccessTokenDidFailWithError:context:)
+                    forDelegate:delegate withArg:e withArg:context];
             return;
         }
 
@@ -252,11 +375,14 @@ captureTraditionalSignInFormName:captureFormName
         {
             [JRCaptureData setAccessToken:[r objectForKey:@"access_token"]];
             DLog(@"refreshed access token");
-            callback(YES, nil);
+            [self maybeDispatch:@selector(refreshAccessTokenDidSucceedWithContext:) forDelegate:delegate
+                        withArg:context];
         }
         else
         {
-            callback(NO, [JRCaptureError errorFromResult:r onProvider:nil engageToken:nil]);
+            [self maybeDispatch:@selector(refreshAccessTokenDidFailWithError:context:)
+                    forDelegate:delegate withArg:[JRCaptureError errorFromResult:r onProvider:nil engageToken:nil]
+                        withArg:context];
         }
     }];
 }
@@ -287,12 +413,12 @@ captureTraditionalSignInFormName:captureFormName
 }
 
 + (void)registerNewUser:(JRCaptureUser *)newUser socialRegistrationToken:(NSString *)socialRegistrationToken
-            forDelegate:(id <JRCaptureSignInDelegate>)delegate
+            forDelegate:(id <JRCaptureDelegate>)delegate
 {
     if (!newUser)
     {
-        [JRCaptureApidInterface maybeDispatch:@selector(registerUserDidFailWithError:) forDelegate:delegate
-                                      withArg:[JRCaptureError invalidArgumentErrorWithParameterName:@"newUser"]];
+        [JRCapture maybeDispatch:@selector(registerUserDidFailWithError:) forDelegate:delegate
+                         withArg:[JRCaptureError invalidArgumentErrorWithParameterName:@"newUser"]];
         return;
     }
 
@@ -304,9 +430,9 @@ captureTraditionalSignInFormName:captureFormName
 
     if (!refreshSecret)
     {
-        [JRCaptureApidInterface maybeDispatch:@selector(registerUserDidFailWithError:) forDelegate:delegate
-                                      withArg:[JRCaptureError invalidInternalStateErrorWithDescription:@"unable to generate secure "
-                                              "random refresh secret"]];
+        [JRCapture maybeDispatch:@selector(registerUserDidFailWithError:) forDelegate:delegate
+                         withArg:[JRCaptureError invalidInternalStateErrorWithDescription:@"unable to generate secure "
+                                 "random refresh secret"]];
         return;
     }
 
@@ -315,7 +441,7 @@ captureTraditionalSignInFormName:captureFormName
             @"locale" : config.captureLocale,
             @"response_type" : @"token",
             @"redirect_uri" : [config redirectUri],
-            @"flow_name" : config.captureFlowName,
+            @"flow" : config.captureFlowName,
             @"form" : registrationForm,
             @"refresh_secret" : refreshSecret,
     }];
@@ -334,27 +460,38 @@ captureTraditionalSignInFormName:captureFormName
         urlString = [NSString stringWithFormat:@"%@/oauth/register_native_traditional", config.captureBaseUrl];
     }
 
-    [JRCaptureApidInterface jsonRequestToUrl:urlString params:params completionHandler:^(id parsedResponse, NSError *e)
+    [JRConnectionManager jsonRequestToUrl:urlString params:params completionHandler:^(id parsedResponse, NSError *e)
     {
         [self handleRegistrationResponse:parsedResponse orError:e delegate:delegate];
     }];
 }
 
 + (void)handleRegistrationResponse:(id)parsedResponse orError:(NSError *)e
-                          delegate:(id <JRCaptureSignInDelegate>)delegate
+                          delegate:(id <JRCaptureDelegate>)delegate
 {
     SEL failMsg = @selector(registerUserDidFailWithError:);
     SEL successMsg = @selector(registerUserDidSucceed:);
 
     NSString *accessToken;
-    if (e || 
-            ![parsedResponse isKindOfClass:[NSDictionary class]] || 
-            ![[parsedResponse objectForKey:@"stat"] isEqual:@"ok"] || 
-            !(accessToken = [parsedResponse objectForKey:@"access_token"]))
+    if (e || ![parsedResponse isKindOfClass:[NSDictionary class]])
     {
         if (!e) e = [JRCaptureError invalidApiResponseErrorWithObject:parsedResponse];
+    }
+
+    if (!e && ![[parsedResponse objectForKey:@"stat"] isEqual:@"ok"])
+    {
+        e = [JRCaptureError errorFromResult:parsedResponse onProvider:nil engageToken:nil];
+    }
+
+    if (!e && !(accessToken = [parsedResponse objectForKey:@"access_token"]))
+    {
+        e = [JRCaptureError invalidApiResponseErrorWithObject:parsedResponse];
+    }
+
+    if (e)
+    {
         ALog(@"%@", e);
-        [JRCaptureApidInterface maybeDispatch:failMsg forDelegate:delegate withArg:e];
+        [JRCapture maybeDispatch:failMsg forDelegate:delegate withArg:e];
         return;
     }
 
@@ -362,40 +499,54 @@ captureTraditionalSignInFormName:captureFormName
     {
         JRCaptureUser *newUser_ = [JRCaptureUser captureUserObjectFromDictionary:newUserDict];
         [self setAccessToken:accessToken];
-        [JRCaptureApidInterface maybeDispatch:successMsg forDelegate:delegate withArg:newUser_];
+        [JRCapture maybeDispatch:successMsg forDelegate:delegate withArg:newUser_];
     };
 
     JRCaptureData *config = [JRCaptureData sharedCaptureData];
     NSString *entityUrl = [NSString stringWithFormat:@"%@/entity", config.captureBaseUrl];
-    [JRCaptureApidInterface jsonRequestToUrl:entityUrl params:@{@"access_token" : accessToken}
-                           completionHandler:^(id entityResponse, NSError *e_)
-                           {
-                               if (e_ || ![entityResponse isKindOfClass:[NSDictionary class]] ||
-                                       ![@"ok" isEqual:[entityResponse objectForKey:@"stat"]] ||
-                                       ![entityResponse objectForKey:@"result"])
-                               {
-                                   if (!e_) e_ = [JRCaptureError invalidApiResponseErrorWithObject:parsedResponse];
-                                   ALog(@"%@", e);
-                                   [JRCaptureApidInterface maybeDispatch:failMsg forDelegate:delegate withArg:e_];
-                                   return;
-                               }
+    [JRConnectionManager jsonRequestToUrl:entityUrl params:@{@"access_token" : accessToken}
+                        completionHandler:^(id entityResponse, NSError *e_)
+                        {
+                            if (e_ || ![entityResponse isKindOfClass:[NSDictionary class]] ||
+                                    ![@"ok" isEqual:[entityResponse objectForKey:@"stat"]] ||
+                                    ![entityResponse objectForKey:@"result"])
+                            {
+                                if (!e_) e_ = [JRCaptureError invalidApiResponseErrorWithObject:entityResponse];
+                                ALog(@"%@", e);
+                                [JRCapture maybeDispatch:failMsg forDelegate:delegate withArg:e_];
+                                return;
+                            }
 
-                               userDictHandler([entityResponse objectForKey:@"result"], nil);
-                           }];
+                            userDictHandler([entityResponse objectForKey:@"result"], nil);
+                        }];
 }
 
-//+ (void)maybeDispatch:(SEL)pSelector forDelegate:(id <JRCaptureSignInDelegate>)delegate withArg:(id)arg1
-//              withArg:(id)arg2
-//{
-//    if ([delegate respondsToSelector:pSelector])
-//    {
-//        [delegate performSelector:pSelector withObject:arg1 withObject:arg2];
-//        [delegate performSelector:pSelector withObject:arg1];
-//    }
-//}
++ (void)maybeDispatch:(SEL)pSelector forDelegate:(id <JRCaptureDelegate>)delegate withArg:(id)arg1
+              withArg:(id)arg2
+{
+    DLog(@"Dispatching %@ with %@, %@", NSStringFromSelector(pSelector), arg1, arg2);
+    if ([delegate respondsToSelector:pSelector]) {
+        [delegate performSelector:pSelector withObject:arg1 withObject:arg2];
+    }
+}
+
++ (void)maybeDispatch:(SEL)pSelector forDelegate:(id <JRCaptureDelegate>)delegate withArg:(id)arg
+{
+    DLog(@"Dispatching %@ with %@", NSStringFromSelector(pSelector), arg);
+    if ([delegate respondsToSelector:pSelector])
+    {
+        [delegate performSelector:pSelector withObject:arg];
+    }
+}
 
 - (void)dealloc
 {
     [super dealloc];
 }
+
++ (void)startEngageSignInForDelegate:(id <JRCaptureDelegate>)delegate
+{
+    [JRCapture startEngageSignInDialogForDelegate:delegate];
+}
+
 @end

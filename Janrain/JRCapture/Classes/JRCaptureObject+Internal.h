@@ -30,7 +30,6 @@
 
 #import <Foundation/Foundation.h>
 #import "JRCaptureObject.h"
-#import "JRCaptureUser+Extras.h"
 
 #define cJREncodedCaptureUser @"jrcapture.encodedCaptureUser"
 
@@ -65,6 +64,8 @@ didSucceedWithResult:(NSString *)result context:(NSObject *)context;
 - (void)replaceDidFailForObject:(JRCaptureObject *)object withError:(NSError *)error context:(NSObject *)context;
 @end
 
+@protocol JRCaptureUserDelegate;
+
 @protocol JRCaptureUserTesterDelegate <JRCaptureUserDelegate>
 @optional
 - (void)createCaptureUser:(JRCaptureObject *)object didSucceedWithResult:(NSString *)result context:(NSObject *)context;
@@ -72,10 +73,11 @@ didSucceedWithResult:(NSString *)result context:(NSObject *)context;
 @end
 
 
-@interface JRCaptureObject () <NSCoding>
-@property (retain)   NSString     *captureObjectPath;
-@property (readonly) NSMutableSet *dirtyPropertySet;
-@property BOOL canBeUpdatedOnCapture;
+@interface JRCaptureObject (Private) <NSCoding>
+@property(readwrite, retain, nonatomic) NSString *captureObjectPath;
+@property(readwrite, retain, nonatomic) NSMutableSet *dirtyPropertySet;
+@property(readwrite) BOOL canBeUpdatedOnCapture;
+
 - (NSDictionary *)toDictionaryForEncoder:(BOOL)forEncoder;
 - (NSDictionary *)toUpdateDictionary;
 - (NSDictionary *)toReplaceDictionary;
@@ -83,6 +85,7 @@ didSucceedWithResult:(NSString *)result context:(NSObject *)context;
 
 - (NSSet *)updatablePropertySet;
 - (void)setAllPropertiesToDirty;
+- (void)deepClearDirtyProperties;
 - (NSDictionary *)snapshotDictionaryFromDirtyPropertySet;
 - (void)restoreDirtyPropertiesFromSnapshotDictionary:(NSDictionary *)snapshot;
 

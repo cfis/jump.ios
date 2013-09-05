@@ -28,13 +28,17 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+//#import <FacebookSDK/FacebookSDK.h>
 #import "AppDelegate.h"
 #import "JRCapture.h"
 #import "BackplaneUtils.h"
 #import "debug_log.h"
 #import "JRSessionData.h"
 #import "JRCaptureData.h"
-#import "JREngage.h"
+
+#ifdef JR_FACEBOOK_SDK_TEST
+#  import "FacebookSDK/FacebookSDK.h"
+#endif
 
 @interface JRSessionData (Internal)
 + (void)setServerUrl:(NSString *)serverUrl_;
@@ -55,6 +59,9 @@ AppDelegate *appDelegate = nil;
 @synthesize captureFlowName;
 @synthesize engageAppId;
 @synthesize captureFlowVersion;
+@synthesize captureEnableThinRegistration;
+@synthesize captureTraditionalRegistrationFormName;
+@synthesize captureSocialRegistrationFormName;
 @synthesize captureAppId;
 @synthesize customProviders;
 
@@ -77,13 +84,15 @@ AppDelegate *appDelegate = nil;
 
     [self loadDemoConfigFromPlist];
 
-    [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain
-              captureClientId:captureClientId captureLocale:captureLocale
-                 captureFlowName:captureFlowName captureFlowVersion:captureFlowVersion
-captureTraditionalSignInFormName:captureTraditionalSignInFormName
-    captureTraditionalSignInType:JRConventionalSigninEmailPassword
-                    captureAppId:captureAppId
-         customIdentityProviders:customProviders];
+    [JRCapture setEngageAppId:engageAppId captureDomain:captureDomain captureClientId:captureClientId
+                captureLocale:captureLocale captureFlowName:captureFlowName
+           captureFlowVersion:captureFlowVersion captureTraditionalSignInFormName:captureTraditionalSignInFormName
+ captureTraditionalSignInType:JRTraditionalSignInEmailPassword
+captureEnableThinRegistration:captureEnableThinRegistration
+               customIdentityProviders:customProviders
+captureTraditionalRegistrationFormName:captureTraditionalRegistrationFormName
+     captureSocialRegistrationFormName:captureSocialRegistrationFormName
+                          captureAppId:captureAppId];
 
     [BackplaneUtils asyncFetchNewBackplaneChannelWithBus:bpBusUrlString
                                               completion:^(NSString *newChannel, NSError *error)
@@ -108,8 +117,20 @@ captureTraditionalSignInFormName:captureTraditionalSignInFormName
         self.captureUser = [NSKeyedUnarchiver unarchiveObjectWithData:archivedCaptureUser];
     }
 
+#   ifdef JR_FACEBOOK_SDK_TEST
+        FBSession *t = [FBSession activeSession];
+#   endif
+
     return YES;
 }
+
+#   ifdef JR_FACEBOOK_SDK_TEST
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication
+         annotation:(id)annotation
+{
+        [FBSession.activeSession handleOpenURL:url];
+}
+#   endif
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -134,7 +155,9 @@ captureTraditionalSignInFormName:captureTraditionalSignInFormName
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-
+#   ifdef JR_FACEBOOK_SDK_TEST
+        [FBSession.activeSession handleDidBecomeActive];
+#   endif
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -154,6 +177,7 @@ captureTraditionalSignInFormName:captureTraditionalSignInFormName
     }
     NSDictionary *cfgPlist = [NSDictionary dictionaryWithContentsOfFile:plistPath];
     NSString *configKeyName = [cfgPlist objectForKey:@"default-config"];
+    self.captureEnableThinRegistration = YES;
     [self parseConfigNamed:configKeyName fromConfigPlist:cfgPlist];
 }
 
@@ -174,8 +198,14 @@ captureTraditionalSignInFormName:captureTraditionalSignInFormName
         self.captureTraditionalSignInFormName = [cfg objectForKey:@"captureTraditionalSignInFormName"];
     if ([cfg objectForKey:@"captureFlowName"])
         self.captureFlowName = [cfg objectForKey:@"captureFlowName"];
+    if ([cfg objectForKey:@"captureEnableThinRegistration"])
+        self.captureEnableThinRegistration = [[cfg objectForKey:@"captureEnableThinRegistration"] boolValue];
     if ([cfg objectForKey:@"captureFlowVersion"])
         self.captureFlowVersion = [cfg objectForKey:@"captureFlowVersion"];
+    if ([cfg objectForKey:@"captureTraditionalRegistrationFormName"])
+        self.captureTraditionalRegistrationFormName = [cfg objectForKey:@"captureTraditionalRegistrationFormName"];
+    if ([cfg objectForKey:@"captureSocialRegistrationFormName"])
+        self.captureSocialRegistrationFormName = [cfg objectForKey:@"captureSocialRegistrationFormName"];
     if ([cfg objectForKey:@"captureAppId"])
         self.captureAppId = [cfg objectForKey:@"captureAppId"];
     if ([cfg objectForKey:@"engageAppId"])

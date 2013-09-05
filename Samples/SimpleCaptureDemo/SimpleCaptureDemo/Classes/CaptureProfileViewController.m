@@ -38,8 +38,10 @@
 #import "AppDelegate.h"
 #import "JRCapture.h"
 #import "Utils.h"
+#import "JRCaptureError.h"
 
-@interface CaptureProfileViewController () <JRCaptureSignInDelegate>
+@interface CaptureProfileViewController () <UITextViewDelegate, UIAlertViewDelegate, JRCaptureUserDelegate,
+        UITextFieldDelegate, JRCaptureDelegate>
 @property(nonatomic, retain) id firstResponder;
 @property(nonatomic, retain) NSDate *myBirthdate;
 @end
@@ -83,7 +85,14 @@
         [self pickerChanged];
     }
 
-    self.myDoneButton.title = @"Update";
+    if (appDelegate.isNotYetCreated || !appDelegate.captureUser)
+    {
+        self.myDoneButton.title = @"Register";
+    }
+    else
+    {
+        self.myDoneButton.title = @"Update";
+    }
 }
 
 - (BOOL)isFemaleGender:(NSString *)gender
@@ -159,7 +168,17 @@
     else if (myGenderIdentitySegControl.selectedSegmentIndex == 1)
         appDelegate.captureUser.gender = @"male";
 
-    [appDelegate.captureUser updateOnCaptureForDelegate:self context:nil];
+    if (appDelegate.isNotYetCreated)
+    {
+        [JRCapture registerNewUser:appDelegate.captureUser socialRegistrationToken:appDelegate.registrationToken
+                       forDelegate:self];
+    }
+    else
+    {
+        [appDelegate.captureUser updateOnCaptureForDelegate:self context:nil];
+    }
+
+    self.myDoneButton.enabled = NO;
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -169,6 +188,7 @@
     {
         appDelegate.isNotYetCreated = NO;
         appDelegate.captureUser = nil;
+        appDelegate.registrationToken = nil;
     }
 }
 
@@ -205,16 +225,44 @@
 - (void)updateDidSucceedForObject:(JRCaptureObject *)object context:(NSObject *)context
 {
     [Utils handleSuccessWithTitle:@"Profile updated" message:nil forVc:self];
+    self.myDoneButton.enabled = YES;
 }
 
 - (void)updateDidFailForObject:(JRCaptureObject *)object withError:(NSError *)error context:(NSObject *)context
 {
     [Utils handleFailureWithTitle:@"Profile not updated" message:nil];
+    self.myDoneButton.enabled = YES;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+- (void)registerUserDidSucceed:(JRCaptureUser *)registeredUser
+{
+    appDelegate.isNotYetCreated = NO;
+    appDelegate.captureUser = registeredUser;
+    appDelegate.registrationToken = nil;
+    [Utils handleSuccessWithTitle:@"Registration Complete" message:nil forVc:self];
+}
+
+- (void)registerUserDidFailWithError:(NSError *)error
+{
+    [error isJRMergeFlowError];
+    if ([error isJRFormValidationError])
+    {
+        NSDictionary *invalidFieldLocalizedFailureMessages = [error JRValidationFailureMessages];
+        [Utils handleFailureWithTitle:@"Invalid Form Submission"
+                              message:[invalidFieldLocalizedFailureMessages description]];
+
+    }
+    else
+    {
+        [Utils handleFailureWithTitle:@"Registration Failed" message:[error localizedDescription]];
+    }
+
+    self.myDoneButton.enabled = YES;
 }
 
 @end

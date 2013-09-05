@@ -28,8 +28,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#import "JRCapture.h"
-
 /**
  * @internal
  */
@@ -41,9 +39,8 @@
 @property(nonatomic, readonly, retain) NSString *accessToken;
 @property(nonatomic, readonly, retain) NSString *refreshSecret;
 @property(nonatomic, readonly, retain) NSString *captureLocale;
-@property(nonatomic, readonly, retain) NSString *captureSignInFormName;
+@property(nonatomic, readonly, retain) NSString *captureTraditionalSignInFormName;
 @property(nonatomic, readonly, retain) NSString *captureFlowName;
-//@property(nonatomic, readonly) JRConventionalSigninType captureTradSignInType;
 @property(nonatomic, readonly, retain) NSString *captureTraditionalRegistrationFormName;
 @property(nonatomic, readonly, retain) NSString *captureSocialRegistrationFormName;
 @property(nonatomic, readonly, retain) NSString *captureFlowVersion;
@@ -56,8 +53,8 @@
 + (void)setCaptureRedirectUri:(NSString *)redirectUri;
 
 + (void)setCaptureDomain:(NSString *)captureDomain captureClientId:(NSString *)clientId
-           captureLocale:(NSString *)captureLocale captureSignInFormName:(NSString *)captureSignInFormName
-                       captureFlowName:(NSString *)captureFlowName
+           captureLocale:(NSString *)captureLocale captureTraditionalSignInFormName:(NSString *)captureTraditionalSignInFormName
+                                                                    captureFlowName:(NSString *)captureFlowName
          captureEnableThinRegistration:(BOOL)enableThinRegistration
 captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistrationFormName
      captureSocialRegistrationFormName:(NSString *)captureSocialRegistrationFormName
@@ -79,5 +76,4 @@ captureTraditionalRegistrationFormName:(NSString *)captureTraditionalRegistratio
 
 - (void)loadFlow;
 
-- (NSMutableURLRequest *)urlForPath:(NSString *)path;
 @end

@@ -32,6 +32,7 @@
  Date:   Tuesday, August 24, 2010
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#import "JREngage.h"
 #import "debug_log.h"
 #import "QuartzCore/QuartzCore.h"
 
@@ -172,16 +173,6 @@ static CATransform3D normalizedCATransform3D(CATransform3D d)
     r.m41 = r.m41/i; r.m42 = r.m42/i; r.m43 = r.m43/i; r.m44 = r.m44/i;
     return r;
 }
-
-//static NSString *describeCATransform3D(CATransform3D *t)
-//{
-//    return [NSString stringWithFormat:@"[%f %f %f %f, %f %f %f %f, %f %f %f %f, %f %f %f %f]",
-//            t->m11, t->m12, t->m13, t->m14,
-//            t->m21, t->m22, t->m23, t->m24,
-//            t->m31, t->m32, t->m33, t->m34,
-//            t->m41, t->m42, t->m43, t->m44
-//    ];
-//}
 
 @interface UIWindow (JRUtils)
 -(BOOL)hasRvc;
@@ -488,11 +479,6 @@ static CATransform3D normalizedCATransform3D(CATransform3D d)
 @synthesize animationController;
 @synthesize vcToPresent;
 
-//- (CustomAnimationController *)getAnimationController
-//{
-//    return animationController;
-//}
-
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -646,8 +632,6 @@ static CATransform3D normalizedCATransform3D(CATransform3D d)
 
 @implementation JRUserInterfaceMaestro
 {
-    // This is an invisible container VC used to present the modal and popover dialogs
-    //JRModalViewController *jrModalViewController;
     JRSessionData *sessionData;
     NSMutableArray *delegates;
 
@@ -656,27 +640,10 @@ static CATransform3D normalizedCATransform3D(CATransform3D d)
     BOOL usingAppNav;
     // Presenting custom UINavigationController and pushing JUMP dialog VCs onto it
     BOOL usingCustomNav;
-
-    // The provider to direct-auth on
-    //NSString *directProvider;
-
-    // An app supplied UINavigationController to present, and then push dialogs onto, passed via custom interface dict
-    //UINavigationController *customModalNavigationController;
-    // The host application's UINavigationController, optionally passed via custom interface dict
-    //UINavigationController *applicationNavigationController;
-    //UINavigationController *savedNavigationController;
     UIViewController *viewControllerToPopTo;
-
-    // The JUMP VCs
-    //JRProvidersController *myProvidersController;
-    //JRUserLandingController *myUserLandingController;
-    //JRWebViewController *myWebViewController;
-    //JRPublishActivityController *myPublishActivityController;
-
-    //NSDictionary *janrainInterfaceDefaults;
-    //NSMutableDictionary *customInterfaceDefaults;
     NSDictionary *customInterface;
 }
+
 @synthesize myProvidersController;
 @synthesize myUserLandingController;
 @synthesize myWebViewController;
@@ -687,13 +654,12 @@ static CATransform3D normalizedCATransform3D(CATransform3D d)
 @synthesize savedNavigationController;
 @synthesize customInterfaceDefaults;
 @synthesize janrainInterfaceDefaults;
-@synthesize directProvider;
+@synthesize directProviderName;
 @synthesize customInterface = customInterface;
 
+static JRUserInterfaceMaestro *singleton = nil;
 
-static JRUserInterfaceMaestro* singleton = nil;
-
-+ (JRUserInterfaceMaestro*)sharedMaestro
++ (JRUserInterfaceMaestro *)sharedMaestro
 {
     return singleton;
 }
@@ -803,15 +769,14 @@ static JRUserInterfaceMaestro* singleton = nil;
         else
             padPopoverMode = PadPopoverModeNone;
 
-        @try
-        {
+        @try {
             if (customModalNavigationController)
                 usingCustomNav = YES;
             else
                 usingCustomNav = NO;
+        } @catch (NSException *exception) {
+            handleCustomInterfaceException(exception, @"kJRUseCustomModalNavigationController");
         }
-        @catch (NSException *exception)
-        { handleCustomInterfaceException(exception, @"kJRUseCustomModalNavigationController"); }
     }
     else
     {
@@ -888,13 +853,13 @@ static JRUserInterfaceMaestro* singleton = nil;
                  myUserLandingController,
                  myWebViewController,
                  myPublishActivityController, nil];
-
-    sessionData.dialogIsShowing = YES;
 }
 
 - (void)tearDownViewControllers
 {
     DLog(@"");
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"JRTearingDownViewControllers" object:self];
 
     [delegates removeAllObjects];
     [delegates release], delegates = nil;
@@ -908,9 +873,9 @@ static JRUserInterfaceMaestro* singleton = nil;
     [customModalNavigationController release], customModalNavigationController = nil;
 
     self.customInterface = nil;
-    [directProvider release], directProvider = nil;
+    [directProviderName release], directProviderName = nil;
 
-    sessionData.dialogIsShowing = NO;
+    sessionData.authenticationFlowIsInFlight = NO;
 }
 
 - (void)setUpSocialPublishing
@@ -990,7 +955,7 @@ static JRUserInterfaceMaestro* singleton = nil;
         && [sessionData authenticatedUserForProviderNamed:sessionData.returningAuthenticationProvider]   /* b */
         && !sessionData.currentProvider                                                         /* c */
         && !sessionData.alwaysForceReauth                                                       /* d */
-        && ![sessionData getProviderNamed:sessionData.returningAuthenticationProvider].forceReauth       /* e */
+        && ![sessionData getProviderNamed:sessionData.returningAuthenticationProvider].forceReauthStartUrlFlag       /* e */
         && !sessionData.socialSharing                                                           /* f */
         && [sessionData.authenticationProviders containsObject:sessionData.returningAuthenticationProvider]       /* g */
         && ![((NSArray *)[customInterface objectForKey:kJRRemoveProvidersFromAuthentication])    /* h */
@@ -1064,7 +1029,9 @@ static JRUserInterfaceMaestro* singleton = nil;
 {
     DLog(@"");
     if (!viewControllerToPopTo)
+    {
         viewControllerToPopTo = [[applicationNavigationController topViewController] retain];
+    }
 
     if ([self shouldOpenToUserLandingPage])
     {
@@ -1078,14 +1045,11 @@ static JRUserInterfaceMaestro* singleton = nil;
     }
 }
 
-- (JRProvider *)weAreOnlyAuthenticatingOnThisProvider
+- (JRProvider *)directProvider
 {
-    //sessionData.authenticatingDirectlyOnThisProvider = YES;
+    if (directProviderName)
+        return [sessionData getProviderNamed:directProviderName];
 
-    if (directProvider)
-        return [sessionData getProviderNamed:directProvider];
-
-    //sessionData.authenticatingDirectlyOnThisProvider = NO;
     return nil;
 }
 
@@ -1097,10 +1061,13 @@ static JRUserInterfaceMaestro* singleton = nil;
     [self setUpViewControllers];
 
     UIViewController *dialogVcToPresent;
-    if ((sessionData.currentProvider = [self weAreOnlyAuthenticatingOnThisProvider]))
+    if ((sessionData.currentProvider = [self directProvider]))
         dialogVcToPresent = sessionData.currentProvider.requiresInput ? myUserLandingController : myWebViewController;
     else
         dialogVcToPresent = myProvidersController;
+
+    if (dialogVcToPresent == myWebViewController)
+        [sessionData.currentProvider forceReauth];
 
     if (usingAppNav)
         [self loadApplicationNavigationControllerWithViewController:dialogVcToPresent];
@@ -1122,12 +1089,6 @@ static JRUserInterfaceMaestro* singleton = nil;
         [self loadModalNavigationControllerWithViewController:myPublishActivityController];
 }
 
-- (void)unloadModalNavigationControllerWithTransitionStyle:(UIModalTransitionStyle)style
-{
-    DLog(@"");
-    [jrModalViewController dismissModalNavigationController:style];
-}
-
 - (void)unloadApplicationNavigationController
 {
     DLog(@"");
@@ -1137,7 +1098,7 @@ static JRUserInterfaceMaestro* singleton = nil;
 - (void)unloadUserInterfaceWithTransitionStyle:(UIModalTransitionStyle)style
 {
     DLog(@"");
-    if (!sessionData.dialogIsShowing)
+    if (!sessionData.authenticationFlowIsInFlight)
         return;
 
     if ([sessionData socialSharing])
@@ -1146,10 +1107,12 @@ static JRUserInterfaceMaestro* singleton = nil;
     for (id <JRUserInterfaceDelegate> delegate in delegates)
         [delegate userInterfaceWillClose];
 
-    if (usingAppNav)
+    if (usingAppNav) {
         [self unloadApplicationNavigationController];
-    else
-        [self unloadModalNavigationControllerWithTransitionStyle:style];
+    } else {
+        DLog(@"");
+        [jrModalViewController dismissModalNavigationController:style];
+    }
 
     for (id<JRUserInterfaceDelegate> delegate in delegates)
         [delegate userInterfaceDidClose];
@@ -1169,9 +1132,19 @@ static JRUserInterfaceMaestro* singleton = nil;
         originalRootViewController = myProvidersController;
 
     if (usingAppNav && applicationNavigationController && [applicationNavigationController isViewLoaded])
-        [applicationNavigationController popToViewController:originalRootViewController animated:YES];
+    {
+        if ([[applicationNavigationController viewControllers] containsObject:originalRootViewController])
+            [applicationNavigationController popToViewController:originalRootViewController animated:YES];
+        else
+            [self unloadUserInterfaceWithTransitionStyle:UIModalTransitionStyleCoverVertical];
+    }
     else
-        [jrModalViewController.myNavigationController popToRootViewControllerAnimated:YES];
+    {
+        if ([jrModalViewController.myNavigationController.viewControllers containsObject:originalRootViewController])
+            [jrModalViewController.myNavigationController popToRootViewControllerAnimated:YES];
+        else
+            [self unloadUserInterfaceWithTransitionStyle:UIModalTransitionStyleCoverVertical];
+    }
 }
 
 - (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
@@ -1192,10 +1165,11 @@ static JRUserInterfaceMaestro* singleton = nil;
 - (void)authenticationCompleted
 {
     DLog(@"");
-    if (![sessionData socialSharing])
+    if (![sessionData socialSharing]) {
         [self unloadUserInterfaceWithTransitionStyle:UIModalTransitionStyleCrossDissolve];
-    else
+    } else {
         [self popToOriginalRootViewController];
+    }
 }
 
 - (void)authenticationFailed
@@ -1210,12 +1184,6 @@ static JRUserInterfaceMaestro* singleton = nil;
     [self unloadUserInterfaceWithTransitionStyle:UIModalTransitionStyleCoverVertical];
 }
 
-//- (void)publishingRestarted
-//{
-//    DLog(@"");
-//    [self popToOriginalRootViewController];
-//}
-
 - (void)publishingCompleted
 {
     DLog(@"");
@@ -1227,16 +1195,6 @@ static JRUserInterfaceMaestro* singleton = nil;
     DLog(@"");
     [self unloadUserInterfaceWithTransitionStyle:UIModalTransitionStyleCoverVertical];
 }
-
-//- (void)publishingFailed
-//{
-//    DLog(@"");
-//}
-
-//- (JRModalViewController *)getJrModalViewController
-//{
-//    return jrModalViewController;
-//}
 
 - (void)dealloc
 {
@@ -1252,8 +1210,24 @@ static JRUserInterfaceMaestro* singleton = nil;
     [applicationNavigationController release];
     [savedNavigationController release];
     [customInterfaceDefaults release];
-    [directProvider release];
+    [directProviderName release];
     [customInterface release];
     [super dealloc];
+}
+
+- (void)startWebAuthWithCustomInterface:(NSDictionary *)customInterfaceOverrides provider:(NSString *)provider
+{
+    self.directProviderName = provider;
+    sessionData.authenticationFlowIsInFlight = YES;
+
+    [self showAuthenticationDialogWithCustomInterface:customInterfaceOverrides];
+}
+
+- (void)pushWebViewFromViewController:(UIViewController *)viewController
+{
+    if (viewController != myUserLandingController)
+        [sessionData.currentProvider forceReauth];
+    [[viewController navigationController] pushViewController:[JRUserInterfaceMaestro sharedMaestro].myWebViewController
+                                                     animated:YES];
 }
 @end

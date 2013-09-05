@@ -33,7 +33,6 @@
 
 #import "debug_log.h"
 #import "BackplaneUtils.h"
-#import "JSONKit.h"
 #import "JRConnectionManager.h"
 
 @implementation BackplaneUtils
@@ -108,8 +107,8 @@
 
     void (^urlHandler)(NSURLResponse *, NSData *, NSError *) = ^(NSURLResponse *r, NSData *d, NSError *e)
     {
-        NSString *body = d ? [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding]
-                : nil;
+        //NSString *body = d ? [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding]
+        //        : nil;
         NSInteger code = [((NSHTTPURLResponse *) r) statusCode];
         if (e || code != 200)
         {
@@ -117,7 +116,8 @@
         }
         else
         {
-            NSDictionary *lfResponse = [body objectFromJSONString];
+            NSError *jsonErr = nil;
+            NSDictionary *lfResponse = [NSJSONSerialization JSONObjectWithData:d options:0 error:&jsonErr];
             if (!lfResponse)
             {
                 [self fireErrorOnCompletion:completion r:r d:d e:nil code:0 errorDesc:@"Error parsing LF response."];

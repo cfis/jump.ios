@@ -1,3 +1,70 @@
+v3.3.9
+ - Adds friendly fast failure for unsupported trad auth forms
+v3.3.8
+ - Updates traditional sign-in APIs to be compatible with Janrain's "standard
+   user registration flow".
+ - Traditional sign-in APIs now require a Capture app ID and flow name to be
+   configured, so that a local copy of the flow can be downloaded by the SDK.
+v3.3.7
+ - Fixes a bug in native authentication, which rendered it incompatible with 
+   registration
+ - Fixes a bug in native authentication flows subsequent to the first
+ - Fixes a bug in native authnetication allowing a concurrent web-based auth
+v3.3.6
+ - Fixes an unitialized variable error which causes erroneous JSON parsing errors
+ - Factors Capture delegate protocols into a separate class in SimpleCaptureDemo in
+   order to clarify what delegate messages, exactly, need to be responded to.
+v3.3.5
+ - Adds additional debug logging for troubleshooting UI state transitions
+v3.3.4
+ - Fixes flow_version parameter passing for traditional authentication
+v3.3.3
+ - Fixes another state transition bug, enlarges cookie-clearing-conditions (to cover
+   the direct-to-provider auth flows)
+v3.3.2
+ - Fixes some UI state transition bugs involving provider-direct authentication flows
+v3.3.1
+ - Fixes +[JRCaptureUser fetchCaptureUserFromServerForDelegate:context:], which had been
+   broken in an earlier refactoring 
+v3.3.0
+ - Adds support for Facebook native authentication, i.e. via the iOS Social and Accounts
+   framework, or via the Facebook SDK. See 'Docs/Native Authentication Guide.md' for 
+   details.
+ - Adds support for Key Value Coding to the JRCaptureUser record model.
+ - Adds support for users having multiple active sharing sessions across separate iOS
+   devices.
+v3.2.13
+ - Emits less logging, adds support for a JR_NO_RELEASE_LOGGING #define to disable
+   error logging. Eliminates some compiler warnings from logging macros.
+v3.2.12
+ - Fixes flow name parameter name, previously had relied on defaul_flow_name setting in
+   the dashboard for operation when a flow-name had been set.
+v3.2.11
+ - Fixes display of logged in user in sharing controller
+v3.2.10
+ - Fixes incorrect file organization, breaking Engage-only builds
+   This fix requires removing and re-adding the Janrain project group in the Project
+ - Adds minimum deployment target check (iOS 5.0 or above is required.)
+v3.2.9
+ - Fixes an uninitialized error return value, which can cause erroneous API errors
+v3.2.8
+ - Documentation bug fixes (symbol name updates)
+v3.2.7
+ - Fixes a bug causing a failed first attempt at authentication preventing a successful
+   second attempt.
+ - Add more backwards-compatibility for symbol renames
+ - Fixes a bug related to some IDP session cookies and switching to a different identity
+   on the same IDP.
+ - Removes JSONkit dependency
+ - Fixes a bug relating to new record model objects trying to update unchanged fields 
+v3.2.6
+ - Fixes Engage library re-initialization bug
+v3.2.5
+ - Adds access token refresh support
+v3.2.1
+ - Fixes form validation failure recognition
+v3.2.0
+ - Adds new two-step social registration and tradtional registration support
 v3.1.4
  - Fixes additional dictionary literal invalid values
 v3.1.3
