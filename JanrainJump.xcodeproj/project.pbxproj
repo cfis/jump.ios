@@ -99,6 +99,10 @@
 		8BBB832C1772E01F00896EAA /* JRBase64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB832A1772E01F00896EAA /* JRBase64.m */; };
 		8BBB83341772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BBB832F1772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h */; };
 		8BBB83351772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BBB83301772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m */; };
+		8BC04DD517E83229003104A2 /* JRCaptureConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BC04DD317E83229003104A2 /* JRCaptureConfig.h */; };
+		8BC04DD617E83229003104A2 /* JRCaptureConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BC04DD417E83229003104A2 /* JRCaptureConfig.m */; };
+		8BC04DD917E83527003104A2 /* JRCompatibilityUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8BC04DD717E83527003104A2 /* JRCompatibilityUtils.h */; };
+		8BC04DDA17E83527003104A2 /* JRCompatibilityUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BC04DD817E83527003104A2 /* JRCompatibilityUtils.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -470,6 +474,10 @@
 		8BBB832A1772E01F00896EAA /* JRBase64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRBase64.m; sourceTree = "<group>"; };
 		8BBB832F1772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableDictionary+JRDictionaryUtils.h"; sourceTree = "<group>"; };
 		8BBB83301772E02F00896EAA /* NSMutableDictionary+JRDictionaryUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+JRDictionaryUtils.m"; sourceTree = "<group>"; };
+		8BC04DD317E83229003104A2 /* JRCaptureConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureConfig.h; sourceTree = "<group>"; };
+		8BC04DD417E83229003104A2 /* JRCaptureConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureConfig.m; sourceTree = "<group>"; };
+		8BC04DD717E83527003104A2 /* JRCompatibilityUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCompatibilityUtils.h; sourceTree = "<group>"; };
+		8BC04DD817E83527003104A2 /* JRCompatibilityUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCompatibilityUtils.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -732,6 +740,8 @@
 				8BBA978B17D837C100145E99 /* debug_log.m */,
 				8B82FFC316AE053F00A2540C /* JRActivityObject.h */,
 				8B82FFC416AE053F00A2540C /* JRActivityObject.m */,
+				8BC04DD717E83527003104A2 /* JRCompatibilityUtils.h */,
+				8BC04DD817E83527003104A2 /* JRCompatibilityUtils.m */,
 				8B82FFC516AE053F00A2540C /* JREngage+CustomInterface.h */,
 				8B82FFC616AE053F00A2540C /* JREngage+CustomInterface.m */,
 				8B82FFC716AE053F00A2540C /* JREngage.h */,
@@ -782,6 +792,8 @@
 				8B991A5616AE7CAE0031E60B /* JRCaptureTypes.h */,
 				8B991A5716AE7CAE0031E60B /* JRCaptureUser+Extras.h */,
 				8B991A5816AE7CAE0031E60B /* JRCaptureUser+Extras.m */,
+				8BC04DD317E83229003104A2 /* JRCaptureConfig.h */,
+				8BC04DD417E83229003104A2 /* JRCaptureConfig.m */,
 				8B991A5D16AE7CAE0031E60B /* JREngageWrapper.h */,
 				8B991A5E16AE7CAE0031E60B /* JREngageWrapper.m */,
 				8B991A5F16AE7CAE0031E60B /* JRNSDate+ISO8601_CaptureDateTimeString.h */,
@@ -1147,10 +1159,12 @@
 				8B991A7816AE7CAE0031E60B /* JRLocation.h in Headers */,
 				8B991A7A16AE7CAE0031E60B /* JRName.h in Headers */,
 				8B991A7C16AE7CAE0031E60B /* JROrganizationsElement.h in Headers */,
+				8BC04DD517E83229003104A2 /* JRCaptureConfig.h in Headers */,
 				8B991A7E16AE7CAE0031E60B /* JRPhoneNumbersElement.h in Headers */,
 				8B991A8016AE7CAE0031E60B /* JRPhotosElement.h in Headers */,
 				8B991A8216AE7CAE0031E60B /* JRPrimaryAddress.h in Headers */,
 				8B991A8416AE7CAE0031E60B /* JRProfile.h in Headers */,
+				8BC04DD917E83527003104A2 /* JRCompatibilityUtils.h in Headers */,
 				8B991A8616AE7CAE0031E60B /* JRProfilePhotosElement.h in Headers */,
 				8B991A8816AE7CAE0031E60B /* JRProfilesElement.h in Headers */,
 				8B991A8A16AE7CAE0031E60B /* JRStatusesElement.h in Headers */,
@@ -1235,12 +1249,14 @@
 				8B82030D16AE054100A2540C /* JRActivityObject.m in Sources */,
 				8B82030E16AE054100A2540C /* JREngage+CustomInterface.m in Sources */,
 				8B82030F16AE054100A2540C /* JREngage.m in Sources */,
+				8BC04DDA17E83527003104A2 /* JRCompatibilityUtils.m in Sources */,
 				8B82031016AE054100A2540C /* JREngageError.m in Sources */,
 				8B82031116AE054100A2540C /* JREngagePhonegapPlugin.m in Sources */,
 				8B82031216AE054100A2540C /* JRInfoBar.m in Sources */,
 				8B82031316AE054100A2540C /* JRPreviewLabel.m in Sources */,
 				8B82031416AE054100A2540C /* JRProvidersController.m in Sources */,
 				8B82031516AE054100A2540C /* JRPublishActivityController.m in Sources */,
+				8BC04DD617E83229003104A2 /* JRCaptureConfig.m in Sources */,
 				8B82031616AE054100A2540C /* JRSessionData.m in Sources */,
 				8B82031716AE054100A2540C /* JRUserInterfaceMaestro.m in Sources */,
 				8B82031816AE054100A2540C /* JRUserLandingController.m in Sources */,
