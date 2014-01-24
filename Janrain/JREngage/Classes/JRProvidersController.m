@@ -41,6 +41,7 @@
 #import "JRUserLandingController.h"
 #import "JRNativeAuth.h"
 #import "JREngageError.h"
+#import "JRNativeProvider.h"
 
 @interface UITableViewCellProviders : UITableViewCell
 @end
@@ -69,6 +70,7 @@
 
 @property(retain) NSMutableArray *providers;
 @property(retain) UIView *myTraditionalSignInLoadingView;
+@property(nonatomic, retain) JRNativeProvider *nativeProvider;
 @end
 
 @implementation JRProvidersController
@@ -112,6 +114,10 @@
     DLog(@"");
     [super viewDidLoad];
     myTableView.backgroundColor = [UIColor clearColor];
+
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        [self setEdgesForExtendedLayout:UIRectEdgeNone];
+    }
 
     // If there is a UIColor object set for the background color, use this
     if ([customInterface objectForKey:kJRAuthenticationBackgroundColor])
@@ -218,9 +224,7 @@
     {
         self.providers = [NSMutableArray arrayWithArray:sessionData.authenticationProviders];
         [providers removeObjectsInArray:[customInterface objectForKey:kJRRemoveProvidersFromAuthentication]];
-        [myActivitySpinner stopAnimating];
-        [myActivitySpinner setHidden:YES];
-        [myLoadingLabel setHidden:YES];
+        [self stopActivityIndicator];
 
         // Load the table with the list of providers.
         [myTableView reloadData];
@@ -273,9 +277,7 @@
         self.providers = [NSMutableArray arrayWithArray:sessionData.authenticationProviders];
         [providers removeObjectsInArray:[customInterface objectForKey:kJRRemoveProvidersFromAuthentication]];
 
-        [myActivitySpinner stopAnimating];
-        [myActivitySpinner setHidden:YES];
-        [myLoadingLabel setHidden:YES];
+        [self stopActivityIndicator];
 
         [myTableView reloadData];
 
@@ -287,9 +289,7 @@
         // Polling has timed out
         DLog(@"No Available Providers");
 
-        [myActivitySpinner setHidden:YES];
-        [myLoadingLabel setHidden:YES];
-        [myActivitySpinner stopAnimating];
+        [self stopActivityIndicator];
 
         UIApplication *app = [UIApplication sharedApplication];
         app.networkActivityIndicatorVisible = YES;
@@ -512,23 +512,23 @@
             [myActivitySpinner startAnimating];
             myLoadingLabel.text = @"Signing in ...";
         }];
-        [JRNativeAuth startAuthOnProvider:provider.name completion:^(NSError *e) {
-            if (e)
-            {
-                if ([e.domain isEqualToString:JREngageErrorDomain] && e.code == JRAuthenticationCanceledError)
-                {
-                    [sessionData triggerAuthenticationDidCancel];
-                }
-                else
-                {
-                    [UIView animateWithDuration:0.3 animations:^() {
-                        myTableView.hidden = NO;
-                        [myActivitySpinner setHidden:YES];
-                        [myLoadingLabel setHidden:YES];
-                        [myActivitySpinner stopAnimating];
-                    }];
 
+        [sessionData setCurrentProvider:provider];
+
+        self.nativeProvider = [JRNativeAuth nativeProviderNamed:provider.name withConfiguration:[JREngage instance]];
+        [self.nativeProvider startAuthenticationWithCompletion:^(NSError *e) {
+            if (e) {
+                if ([e.domain isEqualToString:JREngageErrorDomain] && e.code == JRAuthenticationCanceledError) {
+                    [sessionData triggerAuthenticationDidCancel];
+                } else if ([e.domain isEqualToString:JREngageErrorDomain]
+                           && e.code == JRAuthenticationShouldTryWebViewError) {
+                    self.myTableView.hidden = NO;
+                    [self stopActivityIndicator];
                     [self startWebViewAuthOnProvider:provider];
+                } else {
+                    myTableView.hidden = NO;
+                    [self stopActivityIndicator];
+                    [sessionData triggerAuthenticationDidFailWithError:e];
                 }
             }
         }];
@@ -560,6 +560,12 @@
 
 }
 
+- (void)stopActivityIndicator {
+    [myActivitySpinner stopAnimating];
+    [myActivitySpinner setHidden:YES];
+    [myLoadingLabel setHidden:YES];
+}
+
 - (void)userInterfaceWillClose
 {
     [timer invalidate];
@@ -581,6 +587,7 @@
     [infoBar release];
     [providers release];
     [myTraditionalSignInLoadingView release];
+    [_nativeProvider release];
     [super dealloc];
 }
 @end

@@ -9,12 +9,20 @@
 /* Begin PBXBuildFile section */
 		19BC00CC7CE1407ECD3FCEA9 /* icon_amazon_30x30.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC0E7594BE142048FCCDCB /* icon_amazon_30x30.png */; };
 		19BC00F96A6F3733F91354AC /* icon_amazon_30x30@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC083F88EC65DB6CE88AED /* icon_amazon_30x30@2x.png */; };
+		19BC01885B417B64E987C500 /* CaptureEditProfileViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC07DF96012EB5B44C5B6C /* CaptureEditProfileViewController.m */; };
 		19BC01E36A31424334D83559 /* icon_bw_amazon_30x30@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC062CD8DCEB18DCCE2E36 /* icon_bw_amazon_30x30@2x.png */; };
 		19BC0273946224097507522B /* JRCaptureConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC047CA4CD50E9D20AE817 /* JRCaptureConfig.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		19BC038695E3F63ED3DAF62B /* icon_bw_amazon_30x30.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC08BE93BD3ECF364C358F /* icon_bw_amazon_30x30.png */; };
+		19BC03A4F7837E9320636958 /* JRCaptureFlow.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0BFBA1B728272D41559E /* JRCaptureFlow.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		19BC03D72B24CB34F6581A24 /* JRCaptureUIRequestBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC04C4EF4D04199F0988AB /* JRCaptureUIRequestBuilder.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		19BC043CB32C3615A713D687 /* JRCompatibilityUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0257924E51E62204AD0C /* JRCompatibilityUtils.m */; };
 		19BC04A025012377EE30F823 /* logo_amazon_280x65@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC042C5F11B806015E987F /* logo_amazon_280x65@2x.png */; };
+		19BC08BD64B1552774EBDFEA /* JRNativeGooglePlus.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0A194B8B15D5375BBB98 /* JRNativeGooglePlus.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		19BC0C107B9375D96974BA14 /* logo_amazon_280x65.png in Resources */ = {isa = PBXBuildFile; fileRef = 19BC0C00FB7E872C8CEF5A91 /* logo_amazon_280x65.png */; };
+		19BC0DFDCBAF337078CAF21B /* JRNativeProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0A5CBDCA26A833BCC0C0 /* JRNativeProvider.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		19BC0F8289734BEF98CD916D /* JRNativeFacebook.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0AF36F9FFDBE539E801E /* JRNativeFacebook.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		19BC0FA9A0E7BE30978FA073 /* NSURLRequest+JRQueryParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 19BC0F1DDACA94695932BBC0 /* NSURLRequest+JRQueryParams.m */; };
+		4ED8382D17EC307900CA9645 /* LinkedProfilesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4ED8382C17EC307900CA9645 /* LinkedProfilesViewController.m */; };
 		6706F04035DB1BCCDCDF58CF /* Upgrade Guide.md in Resources */ = {isa = PBXBuildFile; fileRef = 6706FCAB908800A9FF445D4B /* Upgrade Guide.md */; };
 		6706F04CB24F25B6607F53A5 /* Engage Authentication Token URL.md in Resources */ = {isa = PBXBuildFile; fileRef = 6706FFEFEE62C8F93EAA251B /* Engage Authentication Token URL.md */; };
 		6706F0548CC1DBB6CEC0407D /* JRCurrentLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6706F48794E72EF1AAA12F65 /* JRCurrentLocation.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -85,6 +93,9 @@
 		C1424E3B144EDDE0ABA1E0E7 /* AlertViewWithBlocks.m in Sources */ = {isa = PBXBuildFile; fileRef = C1424FEDA9B53C3B9EE9AB6E /* AlertViewWithBlocks.m */; };
 		C1424EE3FA47A4163FC6BB09 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1424E26376A97DCC6454072 /* Security.framework */; };
 		D806D1B616A7638E008EEF96 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = D806D1B516A7638E008EEF96 /* assets */; };
+		D894365F18651F2F004BCF0A /* JRNativeTwitter.m in Sources */ = {isa = PBXBuildFile; fileRef = D894365E18651F2F004BCF0A /* JRNativeTwitter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		D894366118651F47004BCF0A /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D894366018651F47004BCF0A /* Social.framework */; };
+		D894366318651F4D004BCF0A /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D894366218651F4D004BCF0A /* Accounts.framework */; };
 		D8E0218B17D14CC700013803 /* icon_googleplus_30x30.png in Resources */ = {isa = PBXBuildFile; fileRef = D8E0218A17D14CC700013803 /* icon_googleplus_30x30.png */; };
 		D8E0218D17D14CFB00013803 /* logo_googleplus_280x65.png in Resources */ = {isa = PBXBuildFile; fileRef = D8E0218C17D14CFB00013803 /* logo_googleplus_280x65.png */; };
 		D8E0218F17D14D0C00013803 /* icon_googleplus_30x30@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D8E0218E17D14D0C00013803 /* icon_googleplus_30x30@2x.png */; };
@@ -299,16 +310,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19BC0172346689920F3635B5 /* JRCaptureUIRequestBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureUIRequestBuilder.h; sourceTree = "<group>"; };
 		19BC0257924E51E62204AD0C /* JRCompatibilityUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCompatibilityUtils.m; sourceTree = "<group>"; };
+		19BC041E76784877DC900CFB /* Native Authentication Guide.md */ = {isa = PBXFileReference; lastKnownFileType = file.md; name = "Native Authentication Guide.md"; path = "../../Docs/Native Authentication Guide.md"; sourceTree = "<group>"; };
 		19BC042C5F11B806015E987F /* logo_amazon_280x65@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "logo_amazon_280x65@2x.png"; sourceTree = "<group>"; };
+		19BC0446B3F416604E5EFB41 /* CaptureEditProfileViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureEditProfileViewController.h; sourceTree = "<group>"; };
+		19BC044CFBB57C725104A436 /* JRNativeFacebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNativeFacebook.h; sourceTree = "<group>"; };
 		19BC047CA4CD50E9D20AE817 /* JRCaptureConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureConfig.m; sourceTree = "<group>"; };
+		19BC04C4EF4D04199F0988AB /* JRCaptureUIRequestBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureUIRequestBuilder.m; sourceTree = "<group>"; };
 		19BC052B6185FEA424AF0113 /* JRCompatibilityUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCompatibilityUtils.h; sourceTree = "<group>"; };
 		19BC062CD8DCEB18DCCE2E36 /* icon_bw_amazon_30x30@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_bw_amazon_30x30@2x.png"; sourceTree = "<group>"; };
+		19BC0729F091BC7BF1711D7B /* JRNativeProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNativeProvider.h; sourceTree = "<group>"; };
+		19BC0790B7A0F9C301BC4638 /* JRCaptureFlow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureFlow.h; sourceTree = "<group>"; };
+		19BC07DF96012EB5B44C5B6C /* CaptureEditProfileViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CaptureEditProfileViewController.m; sourceTree = "<group>"; };
+		19BC082BDAC70108910C88F6 /* NSURLRequest+JRQueryParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURLRequest+JRQueryParams.h"; sourceTree = "<group>"; };
 		19BC083F88EC65DB6CE88AED /* icon_amazon_30x30@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_amazon_30x30@2x.png"; sourceTree = "<group>"; };
 		19BC08BE93BD3ECF364C358F /* icon_bw_amazon_30x30.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_bw_amazon_30x30.png; sourceTree = "<group>"; };
+		19BC0A194B8B15D5375BBB98 /* JRNativeGooglePlus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNativeGooglePlus.m; sourceTree = "<group>"; };
+		19BC0A5CBDCA26A833BCC0C0 /* JRNativeProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNativeProvider.m; sourceTree = "<group>"; };
+		19BC0AF36F9FFDBE539E801E /* JRNativeFacebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNativeFacebook.m; sourceTree = "<group>"; };
+		19BC0BFBA1B728272D41559E /* JRCaptureFlow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRCaptureFlow.m; sourceTree = "<group>"; };
 		19BC0C00FB7E872C8CEF5A91 /* logo_amazon_280x65.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo_amazon_280x65.png; sourceTree = "<group>"; };
+		19BC0C7FA871F682D690A5BC /* JRNativeAuthConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNativeAuthConfig.h; sourceTree = "<group>"; };
 		19BC0C91C468544CC1764EEB /* JRCaptureConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRCaptureConfig.h; sourceTree = "<group>"; };
+		19BC0DD546434509C30D84AF /* JRNativeGooglePlus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNativeGooglePlus.h; sourceTree = "<group>"; };
 		19BC0E7594BE142048FCCDCB /* icon_amazon_30x30.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_amazon_30x30.png; sourceTree = "<group>"; };
+		19BC0F1DDACA94695932BBC0 /* NSURLRequest+JRQueryParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURLRequest+JRQueryParams.m"; sourceTree = "<group>"; };
+		4ED8382B17EC307900CA9645 /* LinkedProfilesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LinkedProfilesViewController.h; path = Classes/LinkedProfilesViewController.h; sourceTree = "<group>"; };
+		4ED8382C17EC307900CA9645 /* LinkedProfilesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LinkedProfilesViewController.m; path = Classes/LinkedProfilesViewController.m; sourceTree = "<group>"; };
 		6706F004B5721D364A0105AB /* JRObjectLevelTwo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRObjectLevelTwo.m; sourceTree = "<group>"; };
 		6706F011CCEAA27C898AC307 /* JRPluralLevelTwoElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRPluralLevelTwoElement.m; sourceTree = "<group>"; };
 		6706F01AA24E373956F9C20D /* JRProfilePhotosElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRProfilePhotosElement.h; sourceTree = "<group>"; };
@@ -424,6 +453,10 @@
 		C1424E26376A97DCC6454072 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		C1424FEDA9B53C3B9EE9AB6E /* AlertViewWithBlocks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AlertViewWithBlocks.m; path = Classes/AlertViewWithBlocks.m; sourceTree = "<group>"; };
 		D806D1B516A7638E008EEF96 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		D894365D18651F2F004BCF0A /* JRNativeTwitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRNativeTwitter.h; sourceTree = "<group>"; };
+		D894365E18651F2F004BCF0A /* JRNativeTwitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRNativeTwitter.m; sourceTree = "<group>"; };
+		D894366018651F47004BCF0A /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		D894366218651F4D004BCF0A /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		D8E0218A17D14CC700013803 /* icon_googleplus_30x30.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_googleplus_30x30.png; sourceTree = "<group>"; };
 		D8E0218C17D14CFB00013803 /* logo_googleplus_280x65.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo_googleplus_280x65.png; sourceTree = "<group>"; };
 		D8E0218E17D14D0C00013803 /* icon_googleplus_30x30@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_googleplus_30x30@2x.png"; sourceTree = "<group>"; };
@@ -665,6 +698,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D894366318651F4D004BCF0A /* Accounts.framework in Frameworks */,
+				D894366118651F47004BCF0A /* Social.framework in Frameworks */,
 				90C36B6B7717AA0C893E08EA /* UIKit.framework in Frameworks */,
 				90C36B6B7717AA0C893E08EC /* Foundation.framework in Frameworks */,
 				90C36B6B7717AA0C893E08EE /* CoreGraphics.framework in Frameworks */,
@@ -792,6 +827,8 @@
 		90C36B6B7717AA0C893E08E8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D894366218651F4D004BCF0A /* Accounts.framework */,
+				D894366018651F47004BCF0A /* Social.framework */,
 				90C36B6B7717AA0C893E090A /* SenTestingKit.framework */,
 				90C36B6B7717AA0C893E08ED /* CoreGraphics.framework */,
 				90C36B6B7717AA0C893E08EB /* Foundation.framework */,
@@ -863,6 +900,10 @@
 				6706F1A44624C7575D0E75DA /* Utils.m */,
 				6706F177967F38CF7CA5D0FC /* CaptureDynamicForm.h */,
 				6706F39D56CA252D2415997F /* CaptureDynamicForm.m */,
+				4ED8382B17EC307900CA9645 /* LinkedProfilesViewController.h */,
+				4ED8382C17EC307900CA9645 /* LinkedProfilesViewController.m */,
+				19BC07DF96012EB5B44C5B6C /* CaptureEditProfileViewController.m */,
+				19BC0446B3F416604E5EFB41 /* CaptureEditProfileViewController.h */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -920,6 +961,7 @@
 				6706FE4A749862BF082D2831 /* README.md */,
 				6706FB16669AD7166E82DB51 /* RELEASE_NOTES */,
 				6706FCAB908800A9FF445D4B /* Upgrade Guide.md */,
+				19BC041E76784877DC900CFB /* Native Authentication Guide.md */,
 			);
 			name = Docs;
 			sourceTree = "<group>";
@@ -933,6 +975,8 @@
 				DF315E8B17A988E100703C83 /* NSDictionary+JRQueryParams.m */,
 				DF315E8C17A988E100703C83 /* NSMutableURLRequest+JRRequestUtils.h */,
 				DF315E8D17A988E100703C83 /* NSMutableURLRequest+JRRequestUtils.m */,
+				19BC0F1DDACA94695932BBC0 /* NSURLRequest+JRQueryParams.m */,
+				19BC082BDAC70108910C88F6 /* NSURLRequest+JRQueryParams.h */,
 			);
 			path = JRConnectionManager;
 			sourceTree = "<group>";
@@ -973,6 +1017,10 @@
 				DF39E02B17A9887300FDA67A /* NSMutableDictionary+JRDictionaryUtils.m */,
 				19BC047CA4CD50E9D20AE817 /* JRCaptureConfig.m */,
 				19BC0C91C468544CC1764EEB /* JRCaptureConfig.h */,
+				19BC0790B7A0F9C301BC4638 /* JRCaptureFlow.h */,
+				19BC0BFBA1B728272D41559E /* JRCaptureFlow.m */,
+				19BC0172346689920F3635B5 /* JRCaptureUIRequestBuilder.h */,
+				19BC04C4EF4D04199F0988AB /* JRCaptureUIRequestBuilder.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -1023,6 +1071,8 @@
 		DFEFE3CF17A9915200760FEE /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				D894365D18651F2F004BCF0A /* JRNativeTwitter.h */,
+				D894365E18651F2F004BCF0A /* JRNativeTwitter.m */,
 				DFEFE3D017A9915200760FEE /* debug_log.h */,
 				DFEFE3D117A9915200760FEE /* debug_log.m */,
 				DFEFE3D217A9915200760FEE /* JRActivityObject.h */,
@@ -1057,6 +1107,13 @@
 				DFEFE3EF17A9915200760FEE /* JRWebViewController.m */,
 				19BC0257924E51E62204AD0C /* JRCompatibilityUtils.m */,
 				19BC052B6185FEA424AF0113 /* JRCompatibilityUtils.h */,
+				19BC044CFBB57C725104A436 /* JRNativeFacebook.h */,
+				19BC0AF36F9FFDBE539E801E /* JRNativeFacebook.m */,
+				19BC0DD546434509C30D84AF /* JRNativeGooglePlus.h */,
+				19BC0A194B8B15D5375BBB98 /* JRNativeGooglePlus.m */,
+				19BC0729F091BC7BF1711D7B /* JRNativeProvider.h */,
+				19BC0A5CBDCA26A833BCC0C0 /* JRNativeProvider.m */,
+				19BC0C7FA871F682D690A5BC /* JRNativeAuthConfig.h */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -1388,7 +1445,7 @@
 		90C36B6B7717AA0C893E08DA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0460;
+				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 90C36B6B7717AA0C893E08DB /* Build configuration list for PBXProject "SimpleCaptureDemo" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1670,6 +1727,7 @@
 				6706FC34AE6B93DA0A7FD0F2 /* JRPrimaryAddress.m in Sources */,
 				6706F93B33D4BDC335A65E73 /* JRAccountsElement.m in Sources */,
 				6706F0548CC1DBB6CEC0407D /* JRCurrentLocation.m in Sources */,
+				4ED8382D17EC307900CA9645 /* LinkedProfilesViewController.m in Sources */,
 				6706F5FBFB18FFEC70EE819A /* JRProfilesElement.m in Sources */,
 				6706FB96928B72AC8E95BBBE /* JRStatusesElement.m in Sources */,
 				6706F619362F907CF818FB72 /* JRAddressesElement.m in Sources */,
@@ -1686,6 +1744,7 @@
 				DF39E03D17A9887300FDA67A /* JRCapture.m in Sources */,
 				DF39E03E17A9887300FDA67A /* JRCaptureApidInterface.m in Sources */,
 				DF39E03F17A9887300FDA67A /* JRCaptureData.m in Sources */,
+				D894365F18651F2F004BCF0A /* JRNativeTwitter.m in Sources */,
 				DF39E04017A9887300FDA67A /* JRCaptureError.m in Sources */,
 				DF39E04117A9887300FDA67A /* JRCaptureObject.m in Sources */,
 				DF39E04217A9887300FDA67A /* JRCaptureUser+Extras.m in Sources */,
@@ -1715,6 +1774,13 @@
 				DFEFE4B417A9915200760FEE /* JREngagePlugin.js in Sources */,
 				19BC043CB32C3615A713D687 /* JRCompatibilityUtils.m in Sources */,
 				19BC0273946224097507522B /* JRCaptureConfig.m in Sources */,
+				19BC01885B417B64E987C500 /* CaptureEditProfileViewController.m in Sources */,
+				19BC0FA9A0E7BE30978FA073 /* NSURLRequest+JRQueryParams.m in Sources */,
+				19BC03A4F7837E9320636958 /* JRCaptureFlow.m in Sources */,
+				19BC03D72B24CB34F6581A24 /* JRCaptureUIRequestBuilder.m in Sources */,
+				19BC0F8289734BEF98CD916D /* JRNativeFacebook.m in Sources */,
+				19BC08BD64B1552774EBDFEA /* JRNativeGooglePlus.m in Sources */,
+				19BC0DFDCBAF337078CAF21B /* JRNativeProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1784,9 +1850,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1796,9 +1863,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -1809,9 +1878,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1827,9 +1897,12 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -1840,21 +1913,15 @@
 				CODE_SIGN_ENTITLEMENTS = SimpleCaptureDemo/SimpleCaptureDemo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimpleCaptureDemo/SimpleCaptureDemo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "SimpleCaptureDemo/SimpleCaptureDemo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK/FacebookSDK.framework/Versions/A\"",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -1869,21 +1936,15 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimpleCaptureDemo/SimpleCaptureDemo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "SimpleCaptureDemo/SimpleCaptureDemo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK/FacebookSDK.framework/Versions/A\"",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -1930,9 +1991,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1942,9 +2004,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -1957,21 +2021,15 @@
 				CODE_SIGN_ENTITLEMENTS = SimpleCaptureDemo/SimpleCaptureDemo.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimpleCaptureDemo/SimpleCaptureDemo-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "SimpleCaptureDemo/SimpleCaptureDemo-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../Documents/FacebookSDK/FacebookSDK.framework/Versions/A\"",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";

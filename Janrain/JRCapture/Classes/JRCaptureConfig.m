@@ -58,6 +58,11 @@
     [self.captureAppId release];
     [self.forgottenPasswordFormName release];
     [self.passwordRecoverUri release];
+    [self.editProfileFormName release];
+    [self.resendEmailVerificationFormName release];
+    [self.googlePlusClientId release];
+    [self.twitterConsumerSecret release];
+    [self.twitterConsumerKey release];
 
     [super dealloc];
 #endif

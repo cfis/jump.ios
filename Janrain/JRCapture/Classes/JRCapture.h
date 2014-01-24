@@ -297,6 +297,18 @@
 - (void)registerUserDidFailWithError:(NSError *)error;
 
 /**
+ * Sent when a user profile update has succeeded
+ */
+- (void)updateUserProfileDidSucceed;
+
+/*
+ * Sent when a user profile update has failed
+ * @param error
+ *   The error causing the failure
+ */
+- (void)updateUserProfileDidFailWithError:(NSError *)error;
+
+/**
  * Sent when the access token has been successfully refreshed
  * @param context
  *   The context supplied when initiating the token refresh
@@ -324,6 +336,42 @@
  *   The error that caused the failure.
  */
 - (void)forgottenPasswordRecoveryDidFailWithError:(NSError *)error;
+
+/**
+ * Sent when resending the email validation email succeeds
+ */
+- (void)resendVerificationEmailDidSucceed;
+
+/**
+ * Sent when resending the email validation email fails
+ * @param error
+ *    The error that caused the failure.
+ */
+- (void)resendVerificationEmailDidFailWithError:(NSError *)error;
+
+/**
+ * Sent when the Account is Linked Successfully
+ */
+- (void)linkNewAccountDidSucceed;
+
+/**
+ * Sent when the Account linking flow fails
+ * @param error
+ *   The error that caused the failure.
+ */
+- (void)linkNewAccountDidFailWithError:(NSError *)error;
+
+/** Sent when the Account unlinking flow succeeds
+ 
+ **/
+- (void)accountUnlinkingDidSucceed;
+
+/**
+ * Sent when the Account unlinking flow fails
+ * @param error
+ *   The error that caused the failure.
+ */
+- (void)accountUnlinkingDidFailWithError:(NSError *)error;
 
 @end
 
@@ -355,6 +403,27 @@
  *   An instance of JRCaptureConfig that contains your configuration values.
  */
 + (void)setCaptureConfig:(JRCaptureConfig *)config;
+
+/**
+ * Set the Engage app id, this will force Engage to reload it's configuration data
+ * @param engageAppId
+ *   The new Engage app id
+ */
++ (void)reconfigureWithEngageAppId:(NSString *)engageAppId;
+
+/**
+ * Set the Capture client id
+ * @param captureClientId
+ *   The new Capture client id
+ */
++ (void)setCaptureClientId:(NSString *)captureClientId;
+
+/**
+ * Set the Capture Domain
+ * @param captureDomain
+ *   The new Capture domain
+ */
++ (void)setCaptureDomain:(NSString *)captureDomain;
 
 /**
  * Method for configuring the library to work with your Janrain Capture and Engage applications.
@@ -680,6 +749,11 @@ captureRegistrationFormName:(NSString *)captureRegistrationFormName
             forDelegate:(id <JRCaptureDelegate>)delegate __unused;
 
 /**
+ * Updates the profile for a given user
+ */
++ (void)updateProfileForUser:(JRCaptureUser *)user delegate:(id <JRCaptureDelegate>)delegate;
+
+/**
  * Signs the currently-signed-in user, if any, out.
  */
 + (void)clearSignInState __unused;
@@ -699,6 +773,52 @@ captureRegistrationFormName:(NSString *)captureRegistrationFormName
  */
 + (void)startForgottenPasswordRecoveryForField:(NSString *)fieldValue recoverUri:(NSString *)recoverUri
                                       delegate:(id <JRCaptureDelegate>)delegate;
+
+/**
+ * Resend the email verification email
+ *
+ * A successful call will cause an email to be sent to the provided email address containing a "resend" link. The link
+ * will use the "verify_email_url" Capture setting as a base and includes a "verification_code" parameter that can be
+ * used to verify the email address.
+ *
+ * @param emailAddress
+ *   The email address of the user that needs to be verified
+ * @param delegate
+ *   The JRCaptureDelegate object that wishes to receive messages regarding user authentication.
+ */
++ (void)resendVerificationEmail:(NSString *)emailAddress delegate:(id <JRCaptureDelegate>)delegate;
+
+/**
+ * Link new account for existing user
+**/
++ (void)startAccountLinkingSignInDialogForDelegate:(id<JRCaptureDelegate>)delegate
+                                 forAccountLinking:(BOOL)linkAccount
+                                   withRedirectUri:(NSString *)redirectUri;
+
++ (void)startLinkNewAccountFordelegate:(id<JRCaptureDelegate>)delegate
+                           redirectUri:(NSString *)redirectUri
+                          withAuthInfo:(NSDictionary *)authInfo;
+
+/**
+ *  Starts the Account unlink flow for a signed-user.
+ *
+ *  A successful call will unlink a linked account from the Exisiting account.
+ *
+ *  @param identifier
+ *    The identifier of the linked account
+ *  @param delegate
+ *    The JRCaptureDelegate object that wishes to receive messages regarding user account unlinking.
+ */
++ (void)startAccountUnLinking:(id <JRCaptureDelegate>)delegate forProfileIdentifier:(NSString *)identifier;
+
++ (void)startActualAccountUnLinking:(id <JRCaptureDelegate>)delegate forProfileIdentifier:(NSString *)identifier;
+
+
+/**
+ * JRCapture URL handler
+ */
++ (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication
+         annotation:(id)annotation;
 
 @end
 

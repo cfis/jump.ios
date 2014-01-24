@@ -107,6 +107,32 @@
  *  The base uri for creating the link in a password recovery email.
  */
 @property (nonatomic, retain) NSString *passwordRecoverUri;
+/**
+ *  The name of the form (from your flow) used for editing the user profile
+ */
+@property (nonatomic, retain) NSString *editProfileFormName;
+
+/**
+ *  The name of the form (from your flow) used for resending the email validation email
+ */
+@property (nonatomic, retain) NSString *resendEmailVerificationFormName;
+
+/**
+ *  Your Google+ client id. Must be for the same google application that is configured in Engage.
+ */
+@property (nonatomic, retain) NSString *googlePlusClientId;
+
+/**
+ *  Your Twitter consumer secret. Must match the value in your Engage Dashboard.
+ *  This is required for native Twitter authentication
+ */
+@property (nonatomic, retain) NSString *twitterConsumerSecret;
+
+/**
+ *  Your Twitter consumer key. Must match the value in your Engage Dashboard.
+ *  This is required for native Twitter authentication
+ */
+@property (nonatomic, retain) NSString *twitterConsumerKey;
 
 /**
  *   Get an empty Capture Configuration

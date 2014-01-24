@@ -38,9 +38,15 @@
 #import "JRUserInterfaceMaestro.h"
 #import "JRWebViewController.h"
 #import "debug_log.h"
+#import "JRNativeAuth.h"
+#import "JRNativeProvider.h"
 
 #define frame_w(a) a.frame.size.width
 #define frame_h(a) a.frame.size.height
+
+@interface JRUserLandingController ()
+@property (nonatomic, retain) JRNativeProvider *nativeProvider;
+@end
 
 @implementation JRUserLandingController
 @synthesize myBackgroundView;
@@ -67,6 +73,10 @@
 {
     DLog(@"");
     [super viewDidLoad];
+
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        [self setEdgesForExtendedLayout:UIRectEdgeNone];
+    }
 
     myTableView.backgroundColor = [UIColor clearColor];
 
@@ -525,6 +535,27 @@ replacementString:(NSString *)string
 {
     DLog(@"");
     DLog(@"user input: %@", textField.text);
+    if ([JRNativeAuth canHandleProvider:sessionData.currentProvider.name]) {
+        self.nativeProvider = [JRNativeAuth nativeProviderNamed:sessionData.currentProvider.name
+                                              withConfiguration:[JREngage instance]];
+        [self.nativeProvider startAuthenticationWithCompletion:^(NSError *error) {
+            if (error) {
+                if ([error.domain isEqualToString:JREngageErrorDomain] && error.code == JRAuthenticationCanceledError) {
+                    [sessionData triggerAuthenticationDidCancel];
+                } else if ([error.domain isEqualToString:JREngageErrorDomain]
+                           && error.code == JRAuthenticationShouldTryWebViewError) {
+                    [self startWebViewAuthentication:textField];
+                } else {
+                    [sessionData triggerAuthenticationDidFailWithError:error];
+                }
+            }
+        }];
+    } else {
+        [self startWebViewAuthentication:textField];
+    }
+}
+
+- (void)startWebViewAuthentication:(UITextField *)textField {
     if (sessionData.currentProvider.requiresInput)
     {
         if (textField.text.length > 0)
@@ -593,6 +624,7 @@ replacementString:(NSString *)string
     [myTableView release];
     [sessionData release];
     [infoBar release];
+    [_nativeProvider release];
 
     [super dealloc];
 }

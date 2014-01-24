@@ -357,6 +357,10 @@ myUserName, mySignOutButton, mySharedCheckMark, mySharedLabel;
     DLog(@"");
     [super viewDidLoad];
 
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        [self setEdgesForExtendedLayout:UIRectEdgeNone];
+    }
+
     self.alreadyShared = [[[NSMutableSet alloc] initWithCapacity:[self.sessionData.sharingProviders count]] autorelease];
     self.cachedProfilePics = [[[NSMutableDictionary alloc] initWithCapacity:[self.sessionData.sharingProviders count]] autorelease];
 
@@ -617,10 +621,11 @@ myUserName, mySignOutButton, mySharedCheckMark, mySharedLabel;
         UIBarButtonItem *barButton;
         if (shared)
         {
+            SEL triggerPublishingDidComplete = sel_registerName("triggerPublishingDidComplete:");
             barButton = [[[UIBarButtonItem alloc] initWithTitle:@"Close"
                                                           style:UIBarButtonItemStyleDone
                                                          target:self.sessionData
-                                                         action:@selector(triggerPublishingDidComplete:)] autorelease];
+                                                         action:triggerPublishingDidComplete] autorelease];
         }
         else
         {

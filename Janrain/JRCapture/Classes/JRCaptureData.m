@@ -34,6 +34,7 @@
 #import "JRCaptureConfig.h"
 #import "NSDictionary+JRQueryParams.h"
 #import "JREngageWrapper.h"
+#import "JRCaptureFlow.h"
 
 #define cJRCaptureKeychainIdentifier @"capture_tokens.janrain"
 #define cJRCaptureKeychainUserName @"capture_user"
@@ -86,12 +87,16 @@ static NSString *const FLOW_KEY = @"JR_capture_flow";
 @property(nonatomic, retain) NSString *captureTraditionalRegistrationFormName;
 @property(nonatomic, retain) NSString *captureSocialRegistrationFormName;
 @property(nonatomic, retain) NSString *captureForgottenPasswordFormName;
+@property(nonatomic, retain) NSString *captureEditProfileFormName;
+@property(nonatomic, retain) NSString *resendEmailVerificationFormName;
 
 //@property(nonatomic) JRTraditionalSignInType captureTradSignInType;
 @property(nonatomic) BOOL captureEnableThinRegistration;
 
-@property(nonatomic, retain) NSDictionary *captureFlow;
+@property(nonatomic, retain) JRCaptureFlow *captureFlow;
+@property(nonatomic, retain) NSArray *linkedProfiles;
 @property(nonatomic) BOOL initialized;
+@property(nonatomic) BOOL socialSignMode;
 @end
 
 @implementation JRCaptureData
@@ -109,6 +114,8 @@ static JRCaptureData *singleton = nil;
 @synthesize captureTraditionalRegistrationFormName;
 @synthesize captureSocialRegistrationFormName;
 @synthesize captureForgottenPasswordFormName;
+@synthesize captureEditProfileFormName;
+@synthesize resendEmailVerificationFormName;
 @synthesize captureFlowVersion;
 @synthesize captureAppId;
 @synthesize captureFlow;
@@ -141,6 +148,13 @@ static JRCaptureData *singleton = nil;
     }
 
     return singleton;
+}
+
++ (NSArray *)getLinkedProfiles {
+    if(singleton) {
+        return [singleton linkedProfiles];
+    }
+    return nil;
 }
 
 + (id)allocWithZone:(NSZone *)zone
@@ -252,7 +266,9 @@ static JRCaptureData *singleton = nil;
     captureDataInstance.captureFlowVersion = config.captureFlowVersion;
     captureDataInstance.captureAppId = config.captureAppId;
     captureDataInstance.captureForgottenPasswordFormName = config.forgottenPasswordFormName;
+    captureDataInstance.captureEditProfileFormName = config.editProfileFormName;
     captureDataInstance.passwordRecoverUri = config.passwordRecoverUri;
+    captureDataInstance.resendEmailVerificationFormName = config.resendEmailVerificationFormName;
 
     if ([captureDataInstance.captureLocale length] &&
             [captureDataInstance.captureFlowName length] && [captureDataInstance.captureAppId length])
@@ -264,31 +280,18 @@ static JRCaptureData *singleton = nil;
 
 - (void)loadFlow
 {
-    self.captureFlow =
+    NSDictionary *flowDict =
             [NSKeyedUnarchiver unarchiveObjectWithData:[[NSUserDefaults standardUserDefaults] objectForKey:FLOW_KEY]];
+    self.captureFlow = [JRCaptureFlow flowWithDictionary:flowDict];
 }
 
 - (NSString *)getForgottenPasswordFieldName {
-    if (!self.captureForgottenPasswordFormName) return nil;
     if (!self.captureForgottenPasswordFormName) {
         [NSException raiseJRDebugException:@"JRCaptureMissingParameterException"
                                     format:@"Missing capture configuration setting forgottenPasswordFormName"];
     }
 
-    NSDictionary *fields = [self.captureFlow objectForKey:@"fields"];
-    NSDictionary *form = [fields objectForKey:self.captureForgottenPasswordFormName];
-    NSArray *formFields = [form objectForKey:@"fields"];
-
-    for (NSString *fieldName in formFields) {
-        NSDictionary *field = [fields objectForKey:fieldName];
-        NSString * type = [field objectForKey:@"type"];
-
-        if ([type isEqualToString:@"email"] || [type isEqualToString:@"text"]) {
-            return fieldName;
-        }
-    }
-
-    return nil;
+    return [self.captureFlow userIdentifyingFieldForForm:self.captureForgottenPasswordFormName];
 }
 
 - (void)downloadFlow
@@ -336,7 +339,7 @@ static JRCaptureData *singleton = nil;
         return;
     }
 
-    self.captureFlow = (NSDictionary *) parsedFlow;
+    self.captureFlow = [JRCaptureFlow flowWithDictionary:(NSDictionary *) parsedFlow];
     DLog(@"Parsed flow, version: %@", [self downloadedFlowVersion]);
     
     [self writeCaptureFlow];
@@ -344,7 +347,7 @@ static JRCaptureData *singleton = nil;
 
 - (void)writeCaptureFlow
 {
-    [[NSUserDefaults standardUserDefaults] setValue:[NSKeyedArchiver archivedDataWithRootObject:captureFlow]
+    [[NSUserDefaults standardUserDefaults] setValue:[NSKeyedArchiver archivedDataWithRootObject:[captureFlow dictionary]]
                                              forKey:FLOW_KEY];
 }
 
@@ -407,6 +410,14 @@ static JRCaptureData *singleton = nil;
     return [[JRCaptureData sharedCaptureData] captureBaseUrl];
 }
 
++ (void)setCaptureClientId:(NSString*)captureClientId {
+    [JRCaptureData sharedCaptureData].clientId = captureClientId;
+}
+
++ (void)setCaptureBaseUrl:(NSString*)baseUrl {
+    [JRCaptureData sharedCaptureData].captureBaseUrl = [baseUrl urlStringFromBaseDomain];
+}
+
 + (NSString *)clientId __unused
 {
     return [[JRCaptureData sharedCaptureData] clientId];
@@ -433,6 +444,8 @@ static JRCaptureData *singleton = nil;
     [passwordRecoverUri release];
     [captureSocialRegistrationFormName release];
     [captureForgottenPasswordFormName release];
+    [captureEditProfileFormName release];
+    [resendEmailVerificationFormName release];
     [super dealloc];
 }
 
@@ -456,8 +469,24 @@ static JRCaptureData *singleton = nil;
     [JRCaptureData sharedCaptureData].bpChannelUrl = bpChannelUrl;
 }
 
++ (void)setLinkedProfiles:(NSArray *)profileData {
+    NSMutableArray *returnArray = [[NSMutableArray alloc]init];
+    if([profileData count] > 0) {
+        for(NSDictionary *dict in profileData) {
+            
+            NSDictionary *tempDict = @{
+                   @"verifiedEmail" : ([dict objectForKey:@"verifiedEmail"] ? [dict objectForKey:@"verifiedEmail"] : @""),
+                   @"identifier" : [dict objectForKey:@"identifier"],
+            };
+            [returnArray addObject:tempDict];
+        }
+    }
+    [JRCaptureData sharedCaptureData].linkedProfiles = profileData;
+    [returnArray release];
+}
 - (NSString *)responseType:(id)delegate {
-    if ([delegate respondsToSelector:@selector(captureDidSucceedWithCode:)]) {
+    SEL captureDidSucceedWithCode = sel_registerName("captureDidSucceedWithCode:");
+    if ([delegate respondsToSelector:captureDidSucceedWithCode]) {
         return @"code_and_token";
     }
     return @"token";

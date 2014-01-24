@@ -169,10 +169,13 @@ static void deleteWebViewCookiesForDomains(NSArray *domains)
         if ((void *)[dictionary objectForKey:@"preferred_username"] != kCFNull)
             _preferredUsername = [[dictionary objectForKey:@"preferred_username"] retain];
 
-        if (welcomeString && ![welcomeString isEqualToString:@""])
+        if (welcomeString && ![welcomeString isEqualToString:@""]) {
             _welcomeString = [welcomeString retain];
-        else
+        } else if (_preferredUsername) {
             _welcomeString = [[NSString stringWithFormat:@"Sign in as %@?", _preferredUsername] retain];
+        } else {
+            _welcomeString = @"Sign back in?";
+        }
     }
 
     return self;
@@ -501,6 +504,7 @@ static void deleteWebViewCookiesForDomains(NSArray *domains)
 @synthesize returningAuthenticationProvider;
 @synthesize currentProvider;
 @synthesize socialSharing;
+@synthesize accountLinking;
 
 @synthesize alwaysForceReauth;
 @synthesize hidePoweredBy;
@@ -548,8 +552,10 @@ static JRSessionData *singleton = nil;
         self.error = [self updateConfig:savedConfigurationBlock];
 
     /* If the dialog is going away, then we don't still need to shorten the urls */
-    if (!isInFlight)
+    if (!isInFlight) {
         stillNeedToShortenUrls = NO;
+        _nativeAuthenticationFlowIsInFlight = NO;
+    }
 
     authenticationFlowIsInFlight = isInFlight;
 }
@@ -569,6 +575,14 @@ static JRSessionData *singleton = nil;
         return;
 
     [self startGetShortenedUrlsForActivity:activity];
+}
+
+-(BOOL)accountLinking {
+    return accountLinking;
+}
+
+-(void)setAccountLinking:(BOOL)linkAccount {
+    accountLinking = linkAccount;
 }
 
 #pragma mark initialization
@@ -761,6 +775,9 @@ static JRSessionData *singleton = nil;
 
     self.savedConfigurationBlock = nil;
     self.updatedEtag = nil;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:JRFinishedUpdatingEngageConfigurationNotification
+                                                        object:self];
 
     return nil;
 }
@@ -1472,6 +1489,12 @@ CALL_DELEGATE_SELECTOR:
         {
             NSString *configJson = [[[NSString alloc] initWithData:payload encoding:NSUTF8StringEncoding] autorelease];
             self.error = [self finishGetConfiguration:configJson response:httpResponse];
+            if (self.error) {
+                [[NSNotificationCenter defaultCenter]
+                        postNotificationName:JRFailedToUpdateEngageConfigurationNotification
+                                      object:self
+                                    userInfo:@{@"error" : self.error}];
+            }
         }
     }
 }
@@ -1642,8 +1665,19 @@ CALL_DELEGATE_SELECTOR:
     NSArray *delegatesCopy = [NSArray arrayWithArray:delegates];
     for (id <JRSessionDelegate> delegate in delegatesCopy)
     {
-        if ([delegate respondsToSelector:@selector(authenticationDidCompleteForUser:forProvider:)])
-            [delegate authenticationDidCompleteForUser:authInfo forProvider:currentProvider.name];
+        if(accountLinking) {
+            if([delegate respondsToSelector:@selector(authenticationDidSucceedForAccountLinking:forProvider:)])
+                [delegate authenticationDidSucceedForAccountLinking:authInfo forProvider:currentProvider.name];
+        }else{
+            if ([delegate respondsToSelector:@selector(authenticationDidCompleteForUser:forProvider:)])
+                [delegate authenticationDidCompleteForUser:authInfo forProvider:currentProvider.name];
+        }
+    }
+    
+    if(accountLinking)
+    {
+        accountLinking = NO;
+        return;
     }
 
     if (tokenUrl)

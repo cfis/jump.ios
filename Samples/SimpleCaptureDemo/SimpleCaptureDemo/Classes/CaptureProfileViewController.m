@@ -76,6 +76,10 @@
 {
     [super viewDidLoad];
 
+    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)]) {
+        [self setEdgesForExtendedLayout:UIRectEdgeNone];
+    }
+
     [myAboutMeTextView setInputAccessoryView:myKeyboardToolbar];
     [myEmailTextField setInputAccessoryView:myKeyboardToolbar];
     [myDisplayNameTextField setInputAccessoryView:myKeyboardToolbar];
@@ -208,10 +212,6 @@
     {
         [JRCapture registerNewUser:appDelegate.captureUser socialRegistrationToken:appDelegate.registrationToken
                        forDelegate:self];
-    }
-    else
-    {
-        [appDelegate.captureUser updateOnCaptureForDelegate:self context:nil];
     }
 
     self.myDoneButton.enabled = NO;
