@@ -28,10 +28,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-
 #import <UIKit/UIKit.h>
-#import "BackplaneUtils.h"
 #import "JRCaptureObject.h"
 
 @interface RootViewController : UIViewController
@@ -64,5 +61,5 @@
 @property (weak, nonatomic) IBOutlet UIButton *unlinkAccountButton;
 @property (weak, nonatomic) IBOutlet UIButton *updateProfileButton;
 @property (weak, nonatomic) IBOutlet UIButton *resendVerificationButton;
-@property(nonatomic, strong) NSDictionary *customUi;
+@property(nonatomic) NSDictionary *customUi;
 @end

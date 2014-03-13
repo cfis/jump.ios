@@ -43,6 +43,7 @@
 #import "JREngageError.h"
 #import "JRNativeProvider.h"
 
+
 @interface UITableViewCellProviders : UITableViewCell
 @end
 
@@ -68,9 +69,9 @@
 @interface JRProvidersController ()
 - (void)createTraditionalSignInLoadingView;
 
-@property(retain) NSMutableArray *providers;
-@property(retain) UIView *myTraditionalSignInLoadingView;
-@property(nonatomic, retain) JRNativeProvider *nativeProvider;
+@property NSMutableArray *providers;
+@property UIView *myTraditionalSignInLoadingView;
+@property(nonatomic) JRNativeProvider *nativeProvider;
 @end
 
 @implementation JRProvidersController
@@ -103,7 +104,7 @@
     if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))
     {
         sessionData = [JRSessionData jrSessionData];
-        customInterface = [theCustomInterface retain];
+        customInterface = theCustomInterface;
     }
 
     return self;
@@ -133,8 +134,8 @@
         self.navigationItem.titleView = titleView;
     } else {
         NSString *l10n = ([customInterface objectForKey:kJRProviderTableTitleString]) ?
-            [customInterface objectForKey:kJRProviderTableTitleString] : @"Sign in with...";
-        self.navigationItem.title = NSLocalizedString(l10n, @"");
+            [customInterface objectForKey:kJRProviderTableTitleString] : NSLocalizedString(@"Sign in with...",nil);
+        self.navigationItem.title = l10n;
     }
 
     myTableView.tableHeaderView = [customInterface objectForKey:kJRProviderTableHeaderView];
@@ -145,18 +146,23 @@
     id const maybeCaptureSignInVc = [customInterface objectForKey:kJRCaptureTraditionalSignInViewController];
     if ([maybeCaptureSignInVc isKindOfClass:NSClassFromString(@"JRTraditionalSignInViewController")])
     {
-        [maybeCaptureSignInVc performSelector:NSSelectorFromString(@"setDelegate:") withObject:self];
-
+        if ([maybeCaptureSignInVc respondsToSelector:@selector(setDelegate:)]){
+            [maybeCaptureSignInVc setDelegate:self];
+        } else {
+            DLog(@"setDelegate selector not found on object %@", maybeCaptureSignInVc);
+            // TODO: NSAssert here?
+        }
         [self createTraditionalSignInLoadingView];
+
     }
 
     if (!hidesCancelButton)
     {
         UIBarButtonItem *cancelButton =
-                [[[UIBarButtonItem alloc]
+                [[UIBarButtonItem alloc]
                         initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
                                              target:sessionData
-                                             action:@selector(triggerAuthenticationDidCancel:)] autorelease];
+                                             action:@selector(triggerAuthenticationDidCancel:)];
 
         self.navigationItem.leftBarButtonItem = cancelButton;
         self.navigationItem.leftBarButtonItem.enabled = YES;
@@ -294,12 +300,12 @@
         UIApplication *app = [UIApplication sharedApplication];
         app.networkActivityIndicatorVisible = YES;
 
-        NSString *message = @"There are no available providers. Either there is a problem connecting or no providers "
-                "have been configured. Please try again later.";
-        UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:@"No Available Providers" message:message
+        NSString *message = NSLocalizedString(@"There are no available providers. Either there is a problem connecting or no providers "
+                "have been configured. Please try again later.", nil);
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"No Available Providers",nil) message:message
                                                         delegate:self
-                                               cancelButtonTitle:@"OK"
-                                               otherButtonTitles:nil] autorelease];
+                                               cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                               otherButtonTitles:nil];
         [alert show];
         return;
     }
@@ -349,13 +355,13 @@
 
 - (void)createTraditionalSignInLoadingView
 {
-    self.myTraditionalSignInLoadingView = [[[UIView alloc] initWithFrame:self.view.frame] autorelease];
+    self.myTraditionalSignInLoadingView = [[UIView alloc] initWithFrame:self.view.frame];
 
     [self.myTraditionalSignInLoadingView setBackgroundColor:[UIColor blackColor]];
 
-    UILabel *loadingLabel = [[[UILabel alloc] initWithFrame:CGRectMake(0, 180, 320, 30)] autorelease];
+    UILabel *loadingLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 180, 320, 30)];
 
-    [loadingLabel setText:@"Completing Sign-In..."];
+    [loadingLabel setText:NSLocalizedString(@"Completing Sign-In...",nil)];
     [loadingLabel setFont:[UIFont systemFontOfSize:20.0]];
     [loadingLabel setTextAlignment:(int)JR_TEXT_ALIGN_CENTER];
     [loadingLabel setTextColor:[UIColor whiteColor]];
@@ -368,7 +374,6 @@
 
     UIActivityIndicatorView *loadingSpinner =
             [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-    [loadingSpinner autorelease];
 
     [loadingSpinner setFrame:CGRectMake(142, self.view.frame.size.height / 2 - 16, 37, 37)];
     [loadingLabel setAutoresizingMask:UIViewAutoresizingNone |
@@ -448,7 +453,7 @@
     else if (![customInterface objectForKey:kJRProviderTableSectionFooterTitleString])
     {
         CGRect frame = CGRectMake(0, 0, myTableView.frame.size.width, infoBar.frame.size.height);
-        return [[[UIView alloc] initWithFrame:frame] autorelease];
+        return [[UIView alloc] initWithFrame:frame];
     }
     else
     {
@@ -477,8 +482,8 @@
             (UITableViewCellProviders *) [tableView dequeueReusableCellWithIdentifier:@"cachedCell"];
 
     if (cell == nil)
-        cell = [[[UITableViewCellProviders alloc]
-                initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cachedCell"] autorelease];
+        cell = [[UITableViewCellProviders alloc]
+                initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"cachedCell"];
 
     JRProvider *provider = [sessionData getProviderNamed:[providers objectAtIndex:(NSUInteger) indexPath.row]];
 
@@ -510,7 +515,7 @@
             [myActivitySpinner setHidden:NO];
             [myLoadingLabel setHidden:NO];
             [myActivitySpinner startAnimating];
-            myLoadingLabel.text = @"Signing in ...";
+            myLoadingLabel.text = NSLocalizedString(@"Signing in ...",nil);
         }];
 
         [sessionData setCurrentProvider:provider];
@@ -578,16 +583,5 @@
 - (void)dealloc
 {
     DLog(@"");
-
-    [customInterface release];
-    [myBackgroundView release];
-    [myTableView release];
-    [myLoadingLabel release];
-    [myActivitySpinner release];
-    [infoBar release];
-    [providers release];
-    [myTraditionalSignInLoadingView release];
-    [_nativeProvider release];
-    [super dealloc];
 }
 @end

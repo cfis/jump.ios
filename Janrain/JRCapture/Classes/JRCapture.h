@@ -60,6 +60,19 @@
 #define startCaptureConventionalSignInForUser startCaptureTraditionalSignInForUser
 
 /**
+ *  NSNotifications
+ */
+
+/** Posted via a NSNotificationQueue when a download flow completes.
+ *  Name:    "JRDownloadFlowResult"
+ *  object:  JRCaptureError
+ *  if the object is nil, the FLOW was successfully downloaded.
+ *  If the JRCaptureError object is !nil, then the FLOW did not download.
+ */
+extern NSString* const JRDownloadFlowResult;
+
+
+/**
  * @mainpage Janrain Capture for iOS
  *
  * <a href="http://developers.janrain.com/documentation/mobile-libraries/">
@@ -389,12 +402,6 @@
  * Configure the library with your Capture and Engage applications
  **/
 /*@{*/
-
-/**
- * Set the Backplane channel URL to which Capture will post identity/login messages to. For use with third party
- * integrations
- */
-+ (void)setBackplaneChannelUrl:(NSString *)backplaneChannelUrl __unused;
 
 /**
  * Method for configuring the library ot work with your Janrain Capture and Engage applications.
@@ -771,7 +778,7 @@ captureRegistrationFormName:(NSString *)captureRegistrationFormName
  *  @param delegate
  *    The JRCaptureDelegate object that wishes to receive messages regarding user authentication.
  */
-+ (void)startForgottenPasswordRecoveryForField:(NSString *)fieldValue recoverUri:(NSString *)recoverUri
++ (void)startForgottenPasswordRecoveryForField:(NSString *)fieldValue
                                       delegate:(id <JRCaptureDelegate>)delegate;
 
 /**

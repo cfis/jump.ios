@@ -43,7 +43,7 @@
 @implementation JRCaptureUserApidHandler
 + (id)captureUserApidHandler
 {
-    return [[[JRCaptureUserApidHandler alloc] init] autorelease];
+    return [[JRCaptureUserApidHandler alloc] init];
 }
 
 - (void)getCaptureUserDidFailWithResult:(NSDictionary *)result context:(NSObject *)context
@@ -236,13 +236,13 @@
 
 + (NSString *)jsonStringForValue:(id)userDict
 {
-    if (userDict == [NSNull null]) return nil;
+    if (!userDict || userDict == [NSNull null]) return nil;
     // This hack will get us the string-ified version of a JSON-able value.
     NSError *ignore = nil;
     NSArray *thisIsAHack = [NSArray arrayWithObject:userDict];
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:thisIsAHack options:(NSJSONWritingOptions) 0
                                                              error:&ignore];
-    NSString *jsonString = [[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] autorelease];
+    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     if ([jsonString characterAtIndex:1] == '"')
         {
             return [jsonString substringWithRange:NSMakeRange(2, [jsonString length] - 4)];

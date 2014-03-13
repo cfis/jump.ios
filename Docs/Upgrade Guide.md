@@ -1,4 +1,4 @@
-# JUMP iOS Upgrade Guide
+# Janrain iOS SDK Upgrade Guide
 
 This guide describes the steps required to upgrade from different versions of the library.
 
@@ -10,6 +10,17 @@ A less desirable but more reliable and more general upgrade strategy:
 2. Remove generated Capture user model project groups
 3. Follow the process described JUMP Integration Guide
 
+### Upgrading from any version to v3.7 or greater
+The Janrain iOS SDK now requires Automatic Reference Counting (ARC). Follow the generalized upgrade process but do
+*NOT* add the `-fno-objc-arc` compiler flag to the Janrain sources. If your project does not use ARC, be sure to set
+the "Objective-C Automatic Reference Counting" build setting to "YES" and add the `-fno-objc-arc` compiler flag to
+any of your sources that do not support ARC.
+
+#### Solutions
+* **no known class method for selector 'startForgottenPasswordRecoveryForField:recoverUri:delegate:'**
+
+    The `recoverUri` parameter has been removed from this method. Use the `password_recover_url` Capture dashboard
+    setting instead and call the method `[JRCapture startForgottenPasswordRecoveryForField:delegate:]`.
 
 ### Upgrading from any version to v3.6 or greater
 1. Ensure that the **Accounts** and **Social** frameworks have been added to your project.

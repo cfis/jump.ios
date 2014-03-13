@@ -36,7 +36,7 @@
 #import "JRCaptureFlow.h"
 
 @interface JRCaptureUIRequestBuilder()
-   @property (nonatomic, retain) id<JRCaptureEnvironment> environment;
+   @property (nonatomic) id<JRCaptureEnvironment> environment;
 @end
 
 @implementation JRCaptureUIRequestBuilder {
@@ -44,9 +44,6 @@
 
 - (id)initWithEnvironment:(id <JRCaptureEnvironment>)environment {
     if (self = [super init]) {
-#if !__has_feature(objc_arc)
-        [environment retain];
-#endif
         _environment = environment;
     }
 
@@ -99,11 +96,6 @@
 
 - (void)dealloc
 {
-#if !__has_feature(objc_arc)
-    [_environment release];
-
-    [super dealloc];
-#endif
 }
 
 @end

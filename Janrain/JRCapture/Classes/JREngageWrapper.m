@@ -47,12 +47,12 @@ typedef enum {
 @end
 
 @interface JREngageWrapper () <JREngageSigninDelegate>
-@property(retain) NSString *engageToken;
-@property(retain) JRTraditionalSignInViewController *nativeSignInViewController;
-@property(retain) id <JRCaptureDelegate> delegate;
+@property NSString *engageToken;
+@property JRTraditionalSignInViewController *nativeSignInViewController;
+@property id <JRCaptureDelegate> delegate;
 @property JREngageDialogState dialogState;
 @property bool didTearDownViewControllers;
-@property(retain) NSString *redirectUri;
+@property NSString *redirectUri;
 @end
 
 @implementation JREngageWrapper
@@ -88,27 +88,10 @@ static JREngageWrapper *singleton = nil;
 
 + (id)allocWithZone:(NSZone *)zone
 {
-    return [[self singletonInstance] retain];
+    return [self singletonInstance];
 }
 
 - (id)copyWithZone:(__unused NSZone *)zone __unused
-{
-    return self;
-}
-
-- (id)retain
-{
-    return self;
-}
-
-- (NSUInteger)retainCount
-{
-    return NSUIntegerMax;
-}
-
-- (oneway void)release { }
-
-- (id)autorelease
 {
     return self;
 }
@@ -190,11 +173,11 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
             ([expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleString] ?
                     [expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleString] :
                     (nativeSignInType == JRTraditionalSignInEmailPassword ?
-                            @"Sign In With Your Email and Password" :
-                            @"Sign In With Your Username and Password"));
+                            NSLocalizedString(@"Sign In With Your Email and Password", nil) :
+                            NSLocalizedString(@"Sign In With Your Username and Password", nil)));
 
     if (![expandedCustomInterfaceOverrides objectForKey:kJRProviderTableSectionHeaderTitleString])
-        [expandedCustomInterfaceOverrides setObject:@"Sign In With a Social Provider"
+        [expandedCustomInterfaceOverrides setObject:NSLocalizedString(@"Sign In With a Social Provider", nil)
                                              forKey:kJRProviderTableSectionHeaderTitleString];
 
     UIView *const titleView = [expandedCustomInterfaceOverrides objectForKey:kJRCaptureTraditionalSignInTitleView];
@@ -276,7 +259,7 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
 - (void)authenticationDidReachTokenUrl:(NSString *)tokenUrl withResponse:(NSURLResponse *)response
                             andPayload:(NSData *)tokenUrlPayload forProvider:(NSString *)provider
 {
-    NSString *payload = [[[NSString alloc] initWithData:tokenUrlPayload encoding:NSUTF8StringEncoding] autorelease];
+    NSString *payload = [[NSString alloc] initWithData:tokenUrlPayload encoding:NSUTF8StringEncoding];
     NSDictionary *payloadDict = [payload JR_objectFromJSONString];
 
     DLog(@"%@", payload);
@@ -334,12 +317,5 @@ expandedCustomInterfaceOverrides:(NSMutableDictionary *)expandedCustomInterfaceO
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-    [delegate release];
-
-    [nativeSignInViewController release];
-    [engageToken release];
-    [redirectUri release];
-    [super dealloc];
 }
 @end

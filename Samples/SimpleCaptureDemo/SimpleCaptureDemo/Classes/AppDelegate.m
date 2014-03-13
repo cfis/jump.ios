@@ -31,11 +31,11 @@
 //#import <FacebookSDK/FacebookSDK.h>
 #import "AppDelegate.h"
 #import "JRCapture.h"
-#import "BackplaneUtils.h"
 #import "debug_log.h"
 #import "JRSessionData.h"
 #import "JRCaptureData.h"
 #import "JRCaptureConfig.h"
+#import "JRCaptureError.h"
 
 #ifdef JR_FACEBOOK_SDK_TEST
 #  import "FacebookSDK/FacebookSDK.h"
@@ -69,14 +69,6 @@ AppDelegate *appDelegate = nil;
 @synthesize captureEditProfileFormName;
 @synthesize resendVerificationFormName;
 
-// Backplane / LiveFyre stuff:
-@synthesize bpChannelUrl;
-@synthesize lfToken;
-@synthesize bpBusUrlString;
-@synthesize liveFyreNetwork;
-@synthesize liveFyreSiteId;
-@synthesize liveFyreArticleId;
-
 // Demo state machine stuff:
 @synthesize currentProvider;
 @synthesize isNotYetCreated;
@@ -85,6 +77,13 @@ AppDelegate *appDelegate = nil;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     appDelegate = self;
+
+    // register for Janrain notification(s)
+    [[NSNotificationCenter defaultCenter]
+            addObserver:self
+               selector:@selector(onJRDownLoadFlowResult:)
+                   name:JRDownloadFlowResult object:nil];
+
 
     [self loadDemoConfigFromPlist];
 
@@ -103,27 +102,11 @@ AppDelegate *appDelegate = nil;
     config.captureSocialRegistrationFormName = captureSocialRegistrationFormName;
     config.captureAppId = captureAppId;
     config.forgottenPasswordFormName = captureForgottenPasswordFormName;
-    config.passwordRecoverUri = @"http://not-a-real-uri.janrain.com/forgotten_password.html";
     config.editProfileFormName = captureEditProfileFormName;
     config.resendEmailVerificationFormName = resendVerificationFormName;
 
     [JRCapture setCaptureConfig:config];
-
-    [BackplaneUtils asyncFetchNewBackplaneChannelWithBus:bpBusUrlString
-                                              completion:^(NSString *newChannel, NSError *error)
-                                              {
-                                                  if (newChannel)
-                                                  {
-                                                      self.bpChannelUrl = newChannel;
-                                                  }
-                                                  else
-                                                  {
-                                                      ALog("%@", [error description]);
-                                                  }
-                                              }];
-
     self.prefs = [NSUserDefaults standardUserDefaults];
-
     self.currentProvider = [self.prefs objectForKey:cJRCurrentProvider];
 
     NSData *archivedCaptureUser = [self.prefs objectForKey:cJRCaptureUser];
@@ -231,16 +214,6 @@ AppDelegate *appDelegate = nil;
         self.captureEditProfileFormName = [cfg objectForKey:@"captureEditProfileFormName"];
     if ([cfg objectForKey:@"resendVerificationFormName"])
         self.resendVerificationFormName = [cfg objectForKey:@"resendVerificationFormName"];
-    if ([cfg objectForKey:@"bpBusUrlString"])
-        self.bpBusUrlString = [cfg objectForKey:@"bpBusUrlString"];
-    if ([cfg objectForKey:@"bpChannelUrl"])
-        self.bpChannelUrl = [cfg objectForKey:@"bpChannelUrl"];
-    if ([cfg objectForKey:@"liveFyreNetwork"])
-        self.liveFyreNetwork = [cfg objectForKey:@"liveFyreNetwork"];
-    if ([cfg objectForKey:@"liveFyreSiteId"])
-        self.liveFyreSiteId = [cfg objectForKey:@"liveFyreSiteId"];
-    if ([cfg objectForKey:@"liveFyreArticleId"])
-        self.liveFyreArticleId = [cfg objectForKey:@"liveFyreArticleId"];
     if ([cfg objectForKey:@"rpxDomain"])
         [JRSessionData setServerUrl:[NSString stringWithFormat:@"https://%@", [cfg objectForKey:@"rpxDomain"]]];
     if ([cfg objectForKey:@"flowUsesTestingCdn"])
@@ -255,4 +228,18 @@ AppDelegate *appDelegate = nil;
     [self.prefs setObject:[NSKeyedArchiver archivedDataWithRootObject:self.captureUser] forKey:cJRCaptureUser];
 }
 
+- (void)onJRDownLoadFlowResult:(NSNotification *)notification
+{
+    if ([notification object] != nil){
+        JRCaptureError *error = (JRCaptureError*)[notification object];
+        NSLog(@"JRCaptureError! Desc=%@", [error localizedDescription]);
+        for (NSString *key in [[error userInfo] allKeys]){
+            NSLog(@"JRCaptureError:%@", [[error userInfo] objectForKey:key]);
+        }
+    }
+    else
+    {
+        NSLog(@"THE Janrain FLOW was successfully downloaded");
+    }
+}
 @end

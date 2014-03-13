@@ -123,7 +123,7 @@ object that manages your application's state model.
 
 3. Add a `JRCaptureUser *` property to your class's interface declaration:
 
-        @property (retain, nonatomic) JRCaptureUser *captureUser;
+        @property (nonatomic) JRCaptureUser *captureUser;
 
 4. In your class's implementation synthesize that property:
 
@@ -156,7 +156,6 @@ Copy and paste this block into `-[AppDelegate application:didFinishLaunchingWith
         config.captureSocialRegistrationFormName = @"socialRegistrationForm"; // e.g.
         config.captureAppId = @"your_capture_app_id";
         config.forgottenPasswordFormName = @"forgotPasswordForm"; // e.g.
-        config.passwordRecoverUri = @"your_password_recovery_uri";
         config.editProfileFormName = @"editProfileForm";
 
         [JRCapture setCaptureConfig:config];
