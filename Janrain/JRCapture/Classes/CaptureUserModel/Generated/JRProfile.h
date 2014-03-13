@@ -70,7 +70,7 @@
 @property (readonly) BOOL canBeUpdatedOnCapture;
 
 @property (nonatomic, copy)     NSString *displayName; /**< The name of this Contact, suitable for display to end-users. */ 
-@property (nonatomic, retain)   JRName *name; /**< The object's \e name property */ 
+@property (nonatomic,strong)    JRName *name; /**< The object's \e name property */ 
 @property (nonatomic, copy)     NSString *nickname; /**< The casual way to address this Contact in real life */ 
 @property (nonatomic, copy)     JRDateTime *published; /**< The date this Contact was first added to the user's address book or friends list. @note A ::JRDateTime property is a property of type \ref typesTable "dateTime" and a typedef of \e NSDate. The accepted format should be an ISO 8601 dateTime string (e.g., <code>yyyy-MM-dd HH:mm:ss.SSSSSS ZZZ</code>) */ 
 @property (nonatomic, copy)     JRDateTime *updated; /**< The most recent date the details of this Contact were updated. @note A ::JRDateTime property is a property of type \ref typesTable "dateTime" and a typedef of \e NSDate. The accepted format should be an ISO 8601 dateTime string (e.g., <code>yyyy-MM-dd HH:mm:ss.SSSSSS ZZZ</code>) */ 
@@ -90,8 +90,8 @@
 @property (nonatomic, copy)     NSArray *organizations; /**< Describes a current or past organizational affiliation of this contact. @note This is an array of JROrganizationsElement objects */ 
 @property (nonatomic, copy)     NSArray *accounts; /**< Describes an account held by this Contact, which MAY be on the Service Provider's service, or MAY be on a different service. @note This is an array of JRAccountsElement objects */ 
 @property (nonatomic, copy)     NSString *aboutMe; /**< A general statement about the person. */ 
-@property (nonatomic, retain)   JRBodyType *bodyType; /**< Person's body characteristics. */ 
-@property (nonatomic, retain)   JRCurrentLocation *currentLocation; /**< The object's \e currentLocation property */ 
+@property (nonatomic,strong)    JRBodyType *bodyType; /**< Person's body characteristics. */ 
+@property (nonatomic,strong)    JRCurrentLocation *currentLocation; /**< The object's \e currentLocation property */ 
 @property (nonatomic, copy)     NSString *ethnicity; /**< Person's ethnicity. */ 
 @property (nonatomic, copy)     NSString *fashion; /**< Person's thoughts on fashion. */ 
 @property (nonatomic, copy)     NSString *happiestWhen; /**< Describes when the person is happiest. */ 

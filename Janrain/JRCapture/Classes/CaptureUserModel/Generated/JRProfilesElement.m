@@ -72,7 +72,6 @@
 {
     [self.dirtyPropertySet addObject:@"identifier"];
 
-    [_identifier autorelease];
     _identifier = [newIdentifier copy];
 }
 
@@ -85,7 +84,6 @@
 {
     [self.dirtyPropertySet addObject:@"domain"];
 
-    [_domain autorelease];
     _domain = [newDomain copy];
 }
 
@@ -98,7 +96,6 @@
 {
     [self.dirtyPropertySet addObject:@"provider"];
 
-    [_provider autorelease];
     _provider = [newProvider copy];
 }
 
@@ -111,7 +108,6 @@
 {
     [self.dirtyPropertySet addObject:@"remote_key"];
 
-    [_remote_key autorelease];
     _remote_key = [newRemote_key copy];
 }
 
@@ -124,7 +120,6 @@
 {
     [self.dirtyPropertySet addObject:@"accessCredentials"];
 
-    [_accessCredentials autorelease];
     _accessCredentials = [newAccessCredentials copy];
 }
 
@@ -135,7 +130,6 @@
 
 - (void)setFriends:(JRStringArray *)newFriends
 {
-    [_friends autorelease];
     _friends = [newFriends copy];
 }
 
@@ -146,7 +140,6 @@
 
 - (void)setFollowing:(JRStringArray *)newFollowing
 {
-    [_following autorelease];
     _following = [newFollowing copy];
 }
 
@@ -157,7 +150,6 @@
 
 - (void)setFollowers:(JRStringArray *)newFollowers
 {
-    [_followers autorelease];
     _followers = [newFollowers copy];
 }
 
@@ -170,8 +162,7 @@
 {
     [self.dirtyPropertySet addObject:@"profile"];
 
-    [_profile autorelease];
-    _profile = [newProfile retain];
+    _profile = newProfile;
 
     [_profile setAllPropertiesToDirty];
 }
@@ -194,7 +185,6 @@
 {
     if (!newIdentifier || !newDomain)
     {
-        [self release];
         return nil;
      }
 
@@ -214,12 +204,12 @@
 
 + (id)profilesElement
 {
-    return [[[JRProfilesElement alloc] init] autorelease];
+    return [[JRProfilesElement alloc] init];
 }
 
 + (id)profilesElementWithIdentifier:(NSString *)identifier andDomain:(NSString *)domain
 {
-    return [[[JRProfilesElement alloc] initWithIdentifier:identifier andDomain:domain] autorelease];
+    return [[JRProfilesElement alloc] initWithIdentifier:identifier andDomain:domain];
 }
 
 - (NSDictionary*)toDictionaryForEncoder:(BOOL)forEncoder
@@ -333,7 +323,7 @@
 {
     DLog(@"%@ %@", capturePath, [dictionary description]);
 
-    NSSet *dirtyPropertySetCopy = [[self.dirtyPropertySet copy] autorelease];
+    NSSet *dirtyPropertySetCopy = [self.dirtyPropertySet copy];
 
     self.canBeUpdatedOnCapture = YES;
     self.captureObjectPath = [NSString stringWithFormat:@"%@/%@#%d", capturePath, @"profiles", [(NSNumber*)[dictionary objectForKey:@"id"] integerValue]];
@@ -396,7 +386,7 @@
     NSMutableDictionary *snapshotDictionary =
              [NSMutableDictionary dictionaryWithCapacity:10];
 
-    [snapshotDictionary setObject:[[self.dirtyPropertySet copy] autorelease] forKey:@"profilesElement"];
+    [snapshotDictionary setObject:[self.dirtyPropertySet copy] forKey:@"profilesElement"];
 
     if (self.profile)
         [snapshotDictionary setObject:[self.profile snapshotDictionaryFromDirtyPropertySet]
@@ -581,18 +571,4 @@
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
-- (void)dealloc
-{
-    [_identifier release];
-    [_domain release];
-    [_provider release];
-    [_remote_key release];
-    [_accessCredentials release];
-    [_friends release];
-    [_following release];
-    [_followers release];
-    [_profile release];
-
-    [super dealloc];
-}
 @end

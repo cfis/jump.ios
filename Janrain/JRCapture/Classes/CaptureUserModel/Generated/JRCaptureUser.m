@@ -251,6 +251,10 @@
     JRPrimaryAddress *_primaryAddress;
     NSArray *_statuses;
     NSArray *_profiles;
+    JRDateTime *_created;
+    JRDateTime *_lastUpdated;
+    JRObjectId *_captureUserId;
+    JRUuid *_uuid;
 }
 @synthesize canBeUpdatedOnCapture;
 
@@ -263,7 +267,6 @@
 {
     [self.dirtyPropertySet addObject:@"aboutMe"];
 
-    [_aboutMe autorelease];
     _aboutMe = [newAboutMe copy];
 }
 
@@ -276,7 +279,6 @@
 {
     [self.dirtyPropertySet addObject:@"currentLocation"];
 
-    [_currentLocation autorelease];
     _currentLocation = [newCurrentLocation copy];
 }
 
@@ -289,7 +291,6 @@
 {
     [self.dirtyPropertySet addObject:@"display"];
 
-    [_display autorelease];
     _display = [newDisplay copy];
 }
 
@@ -300,7 +301,6 @@
 
 - (void)setPhotos:(NSArray *)newPhotos
 {
-    [_photos autorelease];
     _photos = [newPhotos copy];
 }
 
@@ -313,7 +313,6 @@
 {
     [self.dirtyPropertySet addObject:@"displayName"];
 
-    [_displayName autorelease];
     _displayName = [newDisplayName copy];
 }
 
@@ -326,7 +325,6 @@
 {
     [self.dirtyPropertySet addObject:@"email"];
 
-    [_email autorelease];
     _email = [newEmail copy];
 }
 
@@ -339,7 +337,6 @@
 {
     [self.dirtyPropertySet addObject:@"emailVerified"];
 
-    [_emailVerified autorelease];
     _emailVerified = [newEmailVerified copy];
 }
 
@@ -352,7 +349,6 @@
 {
     [self.dirtyPropertySet addObject:@"password"];
 
-    [_password autorelease];
     _password = [newPassword copy];
 }
 
@@ -365,7 +361,6 @@
 {
     [self.dirtyPropertySet addObject:@"lastLogin"];
 
-    [_lastLogin autorelease];
     _lastLogin = [newLastLogin copy];
 }
 
@@ -378,7 +373,6 @@
 {
     [self.dirtyPropertySet addObject:@"givenName"];
 
-    [_givenName autorelease];
     _givenName = [newGivenName copy];
 }
 
@@ -391,7 +385,6 @@
 {
     [self.dirtyPropertySet addObject:@"middleName"];
 
-    [_middleName autorelease];
     _middleName = [newMiddleName copy];
 }
 
@@ -404,7 +397,6 @@
 {
     [self.dirtyPropertySet addObject:@"familyName"];
 
-    [_familyName autorelease];
     _familyName = [newFamilyName copy];
 }
 
@@ -417,7 +409,6 @@
 {
     [self.dirtyPropertySet addObject:@"gender"];
 
-    [_gender autorelease];
     _gender = [newGender copy];
 }
 
@@ -430,7 +421,6 @@
 {
     [self.dirtyPropertySet addObject:@"birthday"];
 
-    [_birthday autorelease];
     _birthday = [newBirthday copy];
 }
 
@@ -443,8 +433,7 @@
 {
     [self.dirtyPropertySet addObject:@"primaryAddress"];
 
-    [_primaryAddress autorelease];
-    _primaryAddress = [newPrimaryAddress retain];
+    _primaryAddress = newPrimaryAddress;
 
     [_primaryAddress setAllPropertiesToDirty];
 }
@@ -456,7 +445,6 @@
 
 - (void)setStatuses:(NSArray *)newStatuses
 {
-    [_statuses autorelease];
     _statuses = [newStatuses copy];
 }
 
@@ -467,8 +455,55 @@
 
 - (void)setProfiles:(NSArray *)newProfiles
 {
-    [_profiles autorelease];
     _profiles = [newProfiles copy];
+}
+
+- (JRDateTime *)created
+{
+    return _created;
+}
+
+- (void)setCreated:(JRDateTime *)newCreated
+{
+    [self.dirtyPropertySet addObject:@"created"];
+
+    _created = [newCreated copy];
+}
+
+- (JRDateTime *)lastUpdated
+{
+    return _lastUpdated;
+}
+
+- (void)setLastUpdated:(JRDateTime *)newLastUpdated
+{
+    [self.dirtyPropertySet addObject:@"lastUpdated"];
+
+    _lastUpdated = [newLastUpdated copy];
+}
+
+- (JRObjectId *)captureUserId
+{
+    return _captureUserId;
+}
+
+- (void)setCaptureUserId:(JRObjectId *)newCaptureUserId
+{
+    [self.dirtyPropertySet addObject:@"captureUserId"];
+
+    _captureUserId = [newCaptureUserId copy];
+}
+
+- (JRUuid *)uuid
+{
+    return _uuid;
+}
+
+- (void)setUuid:(JRUuid *)newUuid
+{
+    [self.dirtyPropertySet addObject:@"uuid"];
+
+    _uuid = [newUuid copy];
 }
 
 - (id)init
@@ -487,7 +522,7 @@
 
 + (id)captureUser
 {
-    return [[[JRCaptureUser alloc] init] autorelease];
+    return [[JRCaptureUser alloc] init];
 }
 
 - (NSDictionary*)toDictionaryForEncoder:(BOOL)forEncoder
@@ -529,6 +564,14 @@
                    forKey:@"statuses"];
     [dictionary setObject:(self.profiles ? [self.profiles arrayOfProfilesDictionariesFromProfilesElementsForEncoder:forEncoder] : [NSNull null])
                    forKey:@"profiles"];
+    [dictionary setObject:(self.created ? [self.created stringFromISO8601DateTime] : [NSNull null])
+                   forKey:@"created"];
+    [dictionary setObject:(self.lastUpdated ? [self.lastUpdated stringFromISO8601DateTime] : [NSNull null])
+                   forKey:@"lastUpdated"];
+    [dictionary setObject:(self.captureUserId ? [NSNumber numberWithInteger:[self.captureUserId integerValue]] : [NSNull null])
+                   forKey:@"id"];
+    [dictionary setObject:(self.uuid ? self.uuid : [NSNull null])
+                   forKey:@"uuid"];
 
     if (forEncoder)
     {
@@ -626,6 +669,22 @@
         [dictionary objectForKey:@"profiles"] != [NSNull null] ? 
         [(NSArray*)[dictionary objectForKey:@"profiles"] arrayOfProfilesElementsFromProfilesDictionariesWithPath:captureUser.captureObjectPath fromDecoder:fromDecoder] : nil;
 
+    captureUser.created =
+        [dictionary objectForKey:@"created"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"created"]] : nil;
+
+    captureUser.lastUpdated =
+        [dictionary objectForKey:@"lastUpdated"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"lastUpdated"]] : nil;
+
+    captureUser.captureUserId =
+        [dictionary objectForKey:@"id"] != [NSNull null] ? 
+        [NSNumber numberWithInteger:[(NSNumber*)[dictionary objectForKey:@"id"] integerValue]] : nil;
+
+    captureUser.uuid =
+        [dictionary objectForKey:@"uuid"] != [NSNull null] ? 
+        [dictionary objectForKey:@"uuid"] : nil;
+
     if (fromDecoder)
         [captureUser.dirtyPropertySet setSet:dirtyPropertySetCopy];
     else
@@ -714,6 +773,22 @@
         [dictionary objectForKey:@"profiles"] != [NSNull null] ? 
         [(NSArray*)[dictionary objectForKey:@"profiles"] arrayOfProfilesElementsFromProfilesDictionariesWithPath:self.captureObjectPath fromDecoder:YES] : nil;
 
+    self.created =
+        [dictionary objectForKey:@"created"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"created"]] : nil;
+
+    self.lastUpdated =
+        [dictionary objectForKey:@"lastUpdated"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"lastUpdated"]] : nil;
+
+    self.captureUserId =
+        [dictionary objectForKey:@"id"] != [NSNull null] ? 
+        [NSNumber numberWithInteger:[(NSNumber*)[dictionary objectForKey:@"id"] integerValue]] : nil;
+
+    self.uuid =
+        [dictionary objectForKey:@"uuid"] != [NSNull null] ? 
+        [dictionary objectForKey:@"uuid"] : nil;
+
     [self.dirtyPropertySet setSet:dirtyPropertySetCopy];
 }
 
@@ -721,7 +796,7 @@
 {
     DLog(@"%@ %@", capturePath, [dictionary description]);
 
-    NSSet *dirtyPropertySetCopy = [[self.dirtyPropertySet copy] autorelease];
+    NSSet *dirtyPropertySetCopy = [self.dirtyPropertySet copy];
 
     self.canBeUpdatedOnCapture = YES;
 
@@ -796,12 +871,28 @@
         [dictionary objectForKey:@"profiles"] != [NSNull null] ? 
         [(NSArray*)[dictionary objectForKey:@"profiles"] arrayOfProfilesElementsFromProfilesDictionariesWithPath:self.captureObjectPath fromDecoder:NO] : nil;
 
+    self.created =
+        [dictionary objectForKey:@"created"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"created"]] : nil;
+
+    self.lastUpdated =
+        [dictionary objectForKey:@"lastUpdated"] != [NSNull null] ? 
+        [JRDateTime dateFromISO8601DateTimeString:[dictionary objectForKey:@"lastUpdated"]] : nil;
+
+    self.captureUserId =
+        [dictionary objectForKey:@"id"] != [NSNull null] ? 
+        [NSNumber numberWithInteger:[(NSNumber*)[dictionary objectForKey:@"id"] integerValue]] : nil;
+
+    self.uuid =
+        [dictionary objectForKey:@"uuid"] != [NSNull null] ? 
+        [dictionary objectForKey:@"uuid"] : nil;
+
     [self.dirtyPropertySet setSet:dirtyPropertySetCopy];
 }
 
 - (NSSet *)updatablePropertySet
 {
-    return [NSSet setWithObjects:@"aboutMe", @"currentLocation", @"display", @"displayName", @"email", @"emailVerified", @"password", @"lastLogin", @"givenName", @"middleName", @"familyName", @"gender", @"birthday", @"primaryAddress", nil];
+    return [NSSet setWithObjects:@"aboutMe", @"currentLocation", @"display", @"displayName", @"email", @"emailVerified", @"password", @"lastLogin", @"givenName", @"middleName", @"familyName", @"gender", @"birthday", @"primaryAddress", @"created", @"lastUpdated", @"captureUserId", @"uuid", nil];
 }
 
 - (void)setAllPropertiesToDirty
@@ -815,7 +906,7 @@
     NSMutableDictionary *snapshotDictionary =
              [NSMutableDictionary dictionaryWithCapacity:10];
 
-    [snapshotDictionary setObject:[[self.dirtyPropertySet copy] autorelease] forKey:@"captureUser"];
+    [snapshotDictionary setObject:[self.dirtyPropertySet copy] forKey:@"captureUser"];
 
     if (self.primaryAddress)
         [snapshotDictionary setObject:[self.primaryAddress snapshotDictionaryFromDirtyPropertySet]
@@ -1068,30 +1159,12 @@
     [dictionary setObject:@"JRPrimaryAddress" forKey:@"primaryAddress"];
     [dictionary setObject:@"NSArray" forKey:@"statuses"];
     [dictionary setObject:@"NSArray" forKey:@"profiles"];
+    [dictionary setObject:@"JRDateTime" forKey:@"created"];
+    [dictionary setObject:@"JRDateTime" forKey:@"lastUpdated"];
+    [dictionary setObject:@"JRObjectId" forKey:@"captureUserId"];
+    [dictionary setObject:@"JRUuid" forKey:@"uuid"];
 
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
-- (void)dealloc
-{
-    [_aboutMe release];
-    [_currentLocation release];
-    [_display release];
-    [_photos release];
-    [_displayName release];
-    [_email release];
-    [_emailVerified release];
-    [_password release];
-    [_lastLogin release];
-    [_givenName release];
-    [_middleName release];
-    [_familyName release];
-    [_gender release];
-    [_birthday release];
-    [_primaryAddress release];
-    [_statuses release];
-    [_profiles release];
-
-    [super dealloc];
-}
 @end

@@ -70,7 +70,6 @@
 {
     [self.dirtyPropertySet addObject:@"formatted"];
 
-    [_formatted autorelease];
     _formatted = [newFormatted copy];
 }
 
@@ -83,7 +82,6 @@
 {
     [self.dirtyPropertySet addObject:@"streetAddress"];
 
-    [_streetAddress autorelease];
     _streetAddress = [newStreetAddress copy];
 }
 
@@ -96,7 +94,6 @@
 {
     [self.dirtyPropertySet addObject:@"extendedAddress"];
 
-    [_extendedAddress autorelease];
     _extendedAddress = [newExtendedAddress copy];
 }
 
@@ -109,7 +106,6 @@
 {
     [self.dirtyPropertySet addObject:@"locality"];
 
-    [_locality autorelease];
     _locality = [newLocality copy];
 }
 
@@ -122,7 +118,6 @@
 {
     [self.dirtyPropertySet addObject:@"region"];
 
-    [_region autorelease];
     _region = [newRegion copy];
 }
 
@@ -135,7 +130,6 @@
 {
     [self.dirtyPropertySet addObject:@"postalCode"];
 
-    [_postalCode autorelease];
     _postalCode = [newPostalCode copy];
 }
 
@@ -148,7 +142,6 @@
 {
     [self.dirtyPropertySet addObject:@"poBox"];
 
-    [_poBox autorelease];
     _poBox = [newPoBox copy];
 }
 
@@ -161,7 +154,6 @@
 {
     [self.dirtyPropertySet addObject:@"country"];
 
-    [_country autorelease];
     _country = [newCountry copy];
 }
 
@@ -174,7 +166,6 @@
 {
     [self.dirtyPropertySet addObject:@"longitude"];
 
-    [_longitude autorelease];
     _longitude = [newLongitude copy];
 }
 
@@ -187,7 +178,6 @@
 {
     [self.dirtyPropertySet addObject:@"latitude"];
 
-    [_latitude autorelease];
     _latitude = [newLatitude copy];
 }
 
@@ -200,7 +190,6 @@
 {
     [self.dirtyPropertySet addObject:@"type"];
 
-    [_type autorelease];
     _type = [newType copy];
 }
 
@@ -213,7 +202,6 @@
 {
     [self.dirtyPropertySet addObject:@"primary"];
 
-    [_primary autorelease];
     _primary = [newPrimary copy];
 }
 
@@ -226,8 +214,7 @@
 {
     [self.dirtyPropertySet addObject:@"primary"];
 
-    [_primary autorelease];
-    _primary = [[NSNumber numberWithBool:boolVal] retain];
+    _primary = [NSNumber numberWithBool:boolVal];
 }
 
 - (id)init
@@ -245,7 +232,7 @@
 
 + (id)addressesElement
 {
-    return [[[JRAddressesElement alloc] init] autorelease];
+    return [[JRAddressesElement alloc] init];
 }
 
 - (NSDictionary*)toDictionaryForEncoder:(BOOL)forEncoder
@@ -377,7 +364,7 @@
 {
     DLog(@"%@ %@", capturePath, [dictionary description]);
 
-    NSSet *dirtyPropertySetCopy = [[self.dirtyPropertySet copy] autorelease];
+    NSSet *dirtyPropertySetCopy = [self.dirtyPropertySet copy];
 
     self.canBeUpdatedOnCapture = YES;
     self.captureObjectPath = [NSString stringWithFormat:@"%@/%@#%d", capturePath, @"addresses", [(NSNumber*)[dictionary objectForKey:@"id"] integerValue]];
@@ -449,7 +436,7 @@
     NSMutableDictionary *snapshotDictionary =
              [NSMutableDictionary dictionaryWithCapacity:10];
 
-    [snapshotDictionary setObject:[[self.dirtyPropertySet copy] autorelease] forKey:@"addressesElement"];
+    [snapshotDictionary setObject:[self.dirtyPropertySet copy] forKey:@"addressesElement"];
 
     return [NSDictionary dictionaryWithDictionary:snapshotDictionary];
 }
@@ -615,21 +602,4 @@
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
-- (void)dealloc
-{
-    [_formatted release];
-    [_streetAddress release];
-    [_extendedAddress release];
-    [_locality release];
-    [_region release];
-    [_postalCode release];
-    [_poBox release];
-    [_country release];
-    [_longitude release];
-    [_latitude release];
-    [_type release];
-    [_primary release];
-
-    [super dealloc];
-}
 @end

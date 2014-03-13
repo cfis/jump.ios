@@ -46,7 +46,7 @@
 @property (nonatomic, copy)     JRStringArray *friends; /**< User's friends @note  A ::JRStringArray property is a plural (array) that holds a list of \e NSStrings. As it is an array, it is therefore a typedef of \e NSArray. This array of \c NSStrings represents a list of \c identifier */ 
 @property (nonatomic, copy)     JRStringArray *following; /**< Who the user is following @note  A ::JRStringArray property is a plural (array) that holds a list of \e NSStrings. As it is an array, it is therefore a typedef of \e NSArray. This array of \c NSStrings represents a list of \c identifier */ 
 @property (nonatomic, copy)     JRStringArray *followers; /**< User's followers @note  A ::JRStringArray property is a plural (array) that holds a list of \e NSStrings. As it is an array, it is therefore a typedef of \e NSArray. This array of \c NSStrings represents a list of \c identifier */ 
-@property (nonatomic, retain)   JRProfile *profile; /**< The object's \e profile property */ 
+@property (nonatomic,strong)    JRProfile *profile; /**< The object's \e profile property */ 
 
 /**
  * @name Constructors

@@ -61,7 +61,6 @@
 {
     [self.dirtyPropertySet addObject:@"value"];
 
-    [_value autorelease];
     _value = [newValue copy];
 }
 
@@ -74,7 +73,6 @@
 {
     [self.dirtyPropertySet addObject:@"type"];
 
-    [_type autorelease];
     _type = [newType copy];
 }
 
@@ -87,7 +85,6 @@
 {
     [self.dirtyPropertySet addObject:@"primary"];
 
-    [_primary autorelease];
     _primary = [newPrimary copy];
 }
 
@@ -100,8 +97,7 @@
 {
     [self.dirtyPropertySet addObject:@"primary"];
 
-    [_primary autorelease];
-    _primary = [[NSNumber numberWithBool:boolVal] retain];
+    _primary = [NSNumber numberWithBool:boolVal];
 }
 
 - (id)init
@@ -119,7 +115,7 @@
 
 + (id)imsElement
 {
-    return [[[JRImsElement alloc] init] autorelease];
+    return [[JRImsElement alloc] init];
 }
 
 - (NSDictionary*)toDictionaryForEncoder:(BOOL)forEncoder
@@ -197,7 +193,7 @@
 {
     DLog(@"%@ %@", capturePath, [dictionary description]);
 
-    NSSet *dirtyPropertySetCopy = [[self.dirtyPropertySet copy] autorelease];
+    NSSet *dirtyPropertySetCopy = [self.dirtyPropertySet copy];
 
     self.canBeUpdatedOnCapture = YES;
     self.captureObjectPath = [NSString stringWithFormat:@"%@/%@#%d", capturePath, @"ims", [(NSNumber*)[dictionary objectForKey:@"id"] integerValue]];
@@ -233,7 +229,7 @@
     NSMutableDictionary *snapshotDictionary =
              [NSMutableDictionary dictionaryWithCapacity:10];
 
-    [snapshotDictionary setObject:[[self.dirtyPropertySet copy] autorelease] forKey:@"imsElement"];
+    [snapshotDictionary setObject:[self.dirtyPropertySet copy] forKey:@"imsElement"];
 
     return [NSDictionary dictionaryWithDictionary:snapshotDictionary];
 }
@@ -318,12 +314,4 @@
     return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
-- (void)dealloc
-{
-    [_value release];
-    [_type release];
-    [_primary release];
-
-    [super dealloc];
-}
 @end
