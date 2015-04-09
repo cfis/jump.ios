@@ -42,6 +42,7 @@
 #import "JRNativeAuth.h"
 #import "JREngageError.h"
 #import "JRNativeProvider.h"
+#import "JRCompatibilityUtils.h"
 
 
 @interface UITableViewCellProviders : UITableViewCell
@@ -147,7 +148,7 @@
     if ([maybeCaptureSignInVc isKindOfClass:NSClassFromString(@"JRTraditionalSignInViewController")])
     {
         if ([maybeCaptureSignInVc respondsToSelector:@selector(setDelegate:)]){
-            [maybeCaptureSignInVc setDelegate:self];
+            [maybeCaptureSignInVc setDelegate:((id<NSFileManagerDelegate>)self)];
         } else {
             DLog(@"setDelegate selector not found on object %@", maybeCaptureSignInVc);
             // TODO: NSAssert here?
@@ -166,7 +167,7 @@
 
         self.navigationItem.leftBarButtonItem = cancelButton;
         self.navigationItem.leftBarButtonItem.enabled = YES;
-        self.navigationItem.leftBarButtonItem.style = UIBarButtonItemStyleBordered;
+        self.navigationItem.leftBarButtonItem.style = UIBarButtonItemStylePlain;
     }
 
     if (!infoBar)
@@ -199,7 +200,7 @@
 {
     DLog(@"");
     [super viewWillAppear:animated];
-    self.contentSizeForViewInPopover = self.view.frame.size;
+    [self jrSetContentSizeForViewInPopover:self.view.frame.size];
 
     // Load the custom background view, if there is one.
     if ([customInterface objectForKey:kJRAuthenticationBackgroundImageView])
@@ -274,7 +275,7 @@
 
     timer = nil;
 
-    DLog(@"prov count = %d", [sessionData.authenticationProviders count]);
+    DLog(@"prov count = %lu", (unsigned long)[sessionData.authenticationProviders count]);
     DLog(@"interval = %f", interval);
 
     if ([sessionData.authenticationProviders count] > 0)
