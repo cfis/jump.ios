@@ -1290,7 +1290,7 @@
 		8B82FEDA16AE04C200A2540C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0450;
+				LastUpgradeCheck = 0630;
 				ORGANIZATIONNAME = Zerista;
 			};
 			buildConfigurationList = 8B82FEDD16AE04C200A2540C /* Build configuration list for PBXProject "JanrainJump" */;
@@ -1494,7 +1494,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				PUBLIC_HEADERS_FOLDER_PATH = include/JanrainJump;
 				SDKROOT = iphoneos;
 			};
