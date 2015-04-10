@@ -86,7 +86,7 @@
  *
  * @param newDomain
  *   The object's \e domain property
- * 
+ *
  * @return
  *   A JRProfilesElement object initialized with the given required properties: \e newIdentifier, \e newDomain.
  *   If the required arguments are \e nil or \e [NSNull null], returns \e nil
@@ -101,7 +101,7 @@
  *
  * @param domain
  *   The object's \e domain property
- * 
+ *
  * @return
  *   A JRProfilesElement object initialized with the given required properties: \e identifier, \e domain.
  *   If the required arguments are \e nil or \e [NSNull null], returns \e nil
@@ -254,13 +254,13 @@
 
 /**
  * Use this method to determine if the object or element needs to be updated remotely.
- * That is, if there are local changes to any of the object/elements's properties or 
+ * That is, if there are local changes to any of the object/elements's properties or
  * sub-objects, then this object will need to be updated on Capture. You can update
  * an object on Capture by using the method updateOnCaptureForDelegate:context:().
  *
  * @return
  * \c YES if this object or any of it's sub-objects have any properties that have changed
- * locally. This does not include properties that are arrays, if any, or the elements contained 
+ * locally. This does not include properties that are arrays, if any, or the elements contained
  * within the arrays. \c NO if no non-array properties or sub-objects have changed locally.
  *
  * @note
